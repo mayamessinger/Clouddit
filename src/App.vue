@@ -14,6 +14,7 @@
 import excluded from "./assets/stopList2.json";
 import * as d3 from "d3";
 import * as cloud from "d3-cloud";
+import * as promise from "d3.promise";
 import MyCloud from "./components/Cloud.vue";
 
 export default {
@@ -25,7 +26,7 @@ export default {
       limit: 300,
       time: "all",
       redditUrl: "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
-      map: [{word: "blah", occurrences: 5, posts:{}}]
+      map: []
     }
   },
   components: {
@@ -33,7 +34,7 @@ export default {
   },
   methods:  {
     setQuery() {
-      // this.map = [];
+      this.map = [];
       // this.subreddit = document.getElementById("subreddit").value;
       // this.sort = document.getElementById("sort").value;
       // this.limit = document.getElementById("limit").value;
@@ -42,19 +43,17 @@ export default {
       d3.select("svg").remove();
 
       this.redditUrl = "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
-      this.getPostsData(this.redditUrl);
-      this.makeCloud();
+
+      this.getPostsData(this.redditUrl).then(this.makeCloud());
       // makeBar();
     },
     getPostsData(url)  {
-      d3.json(url, posts => {
+      return promise.json(url, posts => {
                   posts.data.children.forEach(post => {
                     post.data.title.split(" ").forEach( word =>  {
-                      word = prettify(word);
+                      word = this.prettify(word);
 
-                      console.log(word);
-
-                      if (isExcluded(word)) {
+                      if (this.isExcluded(word)) {
                         return;
                       }
 
@@ -86,7 +85,6 @@ export default {
                     });
                   });
                 });
-      console.log(this.map);
     },
     prettify(word) {
       var specialChars = "!@#*()[]{}|:;<>?,.\"";
@@ -101,8 +99,8 @@ export default {
       return word;
     },
     isExcluded(word) {
-      if (this.excluded.length > 1) {
-        if (this.excluded.includes(word)) {
+      if (excluded.words.length > 1) {
+        if (excluded.words.includes(word)) {
           return true;
         }
         return false;
@@ -112,7 +110,7 @@ export default {
       }
     },
     makeCloud() {
-      // if (this.map.length > 1) {
+      if (this.map.length > 1) {
         var words = this.map
           .map(function(d) {
               return {text: d.word, posts: d.posts, size: d.occurrences * 10};
@@ -125,10 +123,10 @@ export default {
                 .fontSize(function(d) { return d.size; }) // operates on each word
                 .on("end", this.draw)  // after making cloud, make image
                 .start(); // make cloud
-      // }
-      // else  {
-      //   setTimeout(this.makeCloud, 500);
-      // }
+      }
+      else  {
+        setTimeout(this.makeCloud, 500);
+      }
     },
     draw(words) {
       var color = d3.scaleOrdinal(d3.schemeCategory10);
