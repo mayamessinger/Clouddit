@@ -1,24 +1,27 @@
 <template>
   <div id="app" class="container">
-    <div class="params">
-      <label class="param">/r/</label>
-      <subreddit :subreddit="subreddit" v-model="subreddit"></subreddit>
-      <label class="param">Sort:</label>
-      <sort :sort="sort" :sorts="sorts" v-model="sort"></sort>
-      <label class="param">Number of posts:</label>
-      <limit :limit="limit" v-model="limit"></limit>
-      <limitNum :limit="limit" v-model="limit"></limitNum>
-      <label class="param">Time range:</label>
-      <timeO :time="time" :times="times" v-model="time"></timeO>
-      <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
+    <div class="row">
+      <myCloud class="col-9" id="cloud">
+      </myCloud>
+      <div class="params col-3">
+        <label class="param">/r/</label>
+        <subreddit :subreddit="subreddit" v-model="subreddit"></subreddit><br />
+        <label class="param">Sort:</label>
+        <sort :sort="sort" :sorts="sorts" v-model="sort"></sort><br />
+        <label class="param"># of posts:</label>
+        <limit :limit="limit" v-model="limit"></limit>
+        <limitNum :limit="limit" v-model="limit"></limitNum><br />
+        <label class="param">Time range:</label>
+        <timeO :time="time" :times="times" v-model="time"></timeO><br />
+        <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
+      </div>
     </div>
-    <myCloud>
-    </myCloud>
   </div>
 </template>
 
 <script>
 import excluded from "./assets/stopList2.json";
+import $ from "jquery";
 import * as d3 from "d3";
 import * as cloud from "d3-cloud";
 import * as promise from "d3.promise";
@@ -58,23 +61,23 @@ export default {
 
       this.redditUrl = "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
 
-      this.getPostsData(this.redditUrl).then(this.makeCloud());
+      setTimeout(this.getPostsData(this.redditUrl).then(this.makeCloud()), 100);
       // makeBar();
     },
     getPostsData(url)  {
       return promise.json(url, posts => {
-                  posts.data.children.forEach(post => {
-                    post.data.title.split(" ").forEach( word =>  {
-                      word = this.prettify(word);
+              posts.data.children.forEach(post => {
+                post.data.title.split(" ").forEach( word =>  {
+                  word = this.prettify(word);
 
-                      if (this.isExcluded(word)) {
-                        return;
-                      }
-                      
-                      this.addToMap(word, post);
-                    });
-                  });
+                  if (this.isExcluded(word)) {
+                    return;
+                  }
+                  
+                  this.addToMap(word, post);
                 });
+              });
+            });
     },
     prettify(word) {
       var specialChars = "!@#*()[]{}|:;<>?,.\"";
@@ -96,7 +99,7 @@ export default {
         return false;
       }
       else  {
-        setTimeout(this.isExcluded(word), 500);
+        setTimeout(this.isExcluded(word), 100);
       }
     },
     addToMap(word, post)  {
@@ -144,19 +147,19 @@ export default {
                 .start(); // make cloud
       }
       else  {
-        setTimeout(this.makeCloud, 500);
+        setTimeout(this.makeCloud, 100);
       }
     },
     draw(words) {
       var color = d3.scaleOrdinal(d3.schemeCategory10);
       
-      d3.select("body")
+      d3.select(".cloud")
               .append("svg")  // make HTML component
-              .attr("width", screen.width)  // size of container (svg)
-              .attr("height", screen.height)  // size of container (svg)
+              .attr("width", $("#cloud").width())  // size of container (svg)
+              .attr("height", $("#cloud").height())  // size of container (svg)
               .attr("class", "wordcloud") // maake HTML class
               .append("g")  // container element for svg
-              .attr("transform", "translate(" + screen.width / 2 + "," + screen.height / 2 + ")") // set center point of cloud
+              .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 2 + ")") // set center point of cloud
               .selectAll("text")  // select all child elements
               .data(words)  // data to use
               .enter().append("text") // get data missing elements
@@ -192,11 +195,48 @@ export default {
 </script>
 
 <style lang="scss">
+html  {
+  height: 100%;
+  width: 100%;
+}
+
+body  {
+  height: 100%;
+  width: 100%;
+}
+
+#app  {
+  height: 100%;
+  padding: 0;
+  width: 100%;
+}
+
+.container  {
+  margin: 0 0 0 0;
+  max-width: 100%;
+}
+
+.row  {
+  height: 100%;
+  width: 100%;
+}
+
 .params {
-  text-align: center;
+  margin-top: 3%;
+}
+
+.params input {
+  border-color: black;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.params select {
+  border: none;
 }
 
 .param  {
-  margin-left: 3%;
+  margin-left: 1%;
 }
 </style>
