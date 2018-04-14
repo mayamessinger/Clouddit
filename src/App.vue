@@ -70,32 +70,8 @@ export default {
                       if (this.isExcluded(word)) {
                         return;
                       }
-
-                      var index = null;
-                      for (var i = 0; i < this.map.length; i++)  {
-                        if (this.map[i].word === word) {
-                          index = i;
-                          break;
-                        }
-                      }
                       
-                      if (index !== null) {
-                        this.map[i].occurrences++;
-
-                        var newPost = true;
-                        this.map[i].posts.forEach(loggedPost => {
-                          if (loggedPost.title === post.data.title && loggedPost.subreddit === post.data.subreddit_name_prefixed) {
-                            newPost = false;
-                          }
-                        });
-
-                        if (newPost) {
-                          this.map[index].posts.push({title: post.data.title, subreddit: post.data.subreddit_name_prefixed, link: "https://reddit.com" + post.data.permalink});
-                        }
-                      }
-                      else  {
-                        this.map.push({word: word, occurrences: 1, posts: [{title: post.data.title, subreddit: post.data.subreddit_name_prefixed, link: "https://www.reddit.com" + post.data.permalink}]});
-                      }
+                      this.addToMap(word, post);
                     });
                   });
                 });
@@ -121,6 +97,33 @@ export default {
       }
       else  {
         setTimeout(this.isExcluded(word), 500);
+      }
+    },
+    addToMap(word, post)  {
+      var index = null;
+          for (var i = 0; i < this.map.length; i++)  {
+            if (this.map[i].word === word) {
+              index = i;
+              break;
+            }
+          }
+
+      if (index !== null) {
+        this.map[i].occurrences++;
+
+        var newPost = true;
+        this.map[i].posts.forEach(loggedPost => {
+          if (loggedPost.title === post.data.title && loggedPost.subreddit === post.data.subreddit_name_prefixed) {
+            newPost = false;
+          }
+        });
+
+        if (newPost) {
+          this.map[index].posts.push({title: post.data.title, subreddit: post.data.subreddit_name_prefixed, link: "https://reddit.com" + post.data.permalink});
+        }
+      }
+      else  {
+        this.map.push({word: word, occurrences: 1, posts: [{title: post.data.title, subreddit: post.data.subreddit_name_prefixed, link: "https://www.reddit.com" + post.data.permalink}]});
       }
     },
     makeCloud() {
