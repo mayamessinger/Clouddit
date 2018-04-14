@@ -1,11 +1,15 @@
 <template>
   <div id="app" class="container">
-    <input type="button" v-on:click="setQuery"/>
-    <myCloud
-      :subreddit="subreddit"
-      :sort="sort"
-      :limit="limit"
-      :time="time">
+    <div>
+      <subreddit :subreddit="subreddit" v-model="subreddit"></subreddit>
+      <sort :sort="sort" :sorts="sorts" v-model="sort"></sort>
+      <label>Number of posts:</label>
+      <limit :limit="limit" v-model="limit"></limit>
+      <limitNum :limit="limit" v-model="limit"></limitNum>
+      <timeO :time="time" :times="times" v-model="time"></timeO>
+      <input type="button" v-on:click="setQuery" value="Visualize" />
+    </div>
+    <myCloud>
     </myCloud>
   </div>
 </template>
@@ -15,7 +19,13 @@ import excluded from "./assets/stopList2.json";
 import * as d3 from "d3";
 import * as cloud from "d3-cloud";
 import * as promise from "d3.promise";
+
 import MyCloud from "./components/Cloud.vue";
+import Subreddit from "./components/Subreddit.vue";
+import Sort from "./components/Sort.vue";
+import Limit from "./components/Limit.vue";
+import LimitNum from "./components/LimitNum.vue";
+import TimeO from "./components/Time.vue";
 
 export default {
   name: 'app',
@@ -23,24 +33,25 @@ export default {
     return {
       subreddit: "all",
       sort: "hot",
-      limit: 300,
+      sorts: ["best", "hot", "new", "controversial", "top", "rising"],
+      limit: 250,
       time: "all",
+      times: ["hour", "day", "week", "month", "year", "all"],
       redditUrl: "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
       map: []
     }
   },
   components: {
-    MyCloud
+    MyCloud,
+    Subreddit,
+    Sort,
+    Limit,
+    LimitNum,
+    TimeO
   },
   methods:  {
     setQuery() {
       this.map = [];
-      // this.subreddit = document.getElementById("subreddit").value;
-      // this.sort = document.getElementById("sort").value;
-      // this.limit = document.getElementById("limit").value;
-      // this.time = document.getElementById("time").value;
-
-      d3.select("svg").remove();
 
       this.redditUrl = "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
 
@@ -110,6 +121,8 @@ export default {
       }
     },
     makeCloud() {
+      d3.select("svg").remove();
+
       if (this.map.length > 1) {
         var words = this.map
           .map(function(d) {
@@ -153,7 +166,7 @@ export default {
               .on('mouseout', function(d){
                   var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
               })
-              .on("click", d => {displayPosts(d.posts);});
+              .on("click", d => {this.displayPosts(d.posts);});
     },
     end(words) { 
       console.log(JSON.stringify(words));
