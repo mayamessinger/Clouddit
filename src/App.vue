@@ -1,13 +1,16 @@
 <template>
   <div id="app" class="container">
-    <div>
+    <div class="params">
+      <label class="param">/r/</label>
       <subreddit :subreddit="subreddit" v-model="subreddit"></subreddit>
+      <label class="param">Sort:</label>
       <sort :sort="sort" :sorts="sorts" v-model="sort"></sort>
-      <label>Number of posts:</label>
+      <label class="param">Number of posts:</label>
       <limit :limit="limit" v-model="limit"></limit>
       <limitNum :limit="limit" v-model="limit"></limitNum>
+      <label class="param">Time range:</label>
       <timeO :time="time" :times="times" v-model="time"></timeO>
-      <input type="button" v-on:click="setQuery" value="Visualize" />
+      <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
     </div>
     <myCloud>
     </myCloud>
@@ -186,5 +189,11 @@ export default {
 </script>
 
 <style lang="scss">
+.params {
+  text-align: center;
+}
 
+.param  {
+  margin-left: 3%;
+}
 </style>
