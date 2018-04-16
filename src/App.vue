@@ -15,6 +15,8 @@
         <timeO :time="time" :times="times" v-model="time"></timeO><br />
         <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
       </div>
+      <posts class="posts col-9" :word="wordSelected" :posts="posts">
+      </posts>
     </div>
   </div>
 </template>
@@ -27,6 +29,7 @@ import * as cloud from "d3-cloud";
 import * as promise from "d3.promise";
 
 import MyCloud from "./components/Cloud.vue";
+import Posts from "./components/Posts.vue";
 import Subreddit from "./components/Subreddit.vue";
 import Sort from "./components/Sort.vue";
 import Limit from "./components/Limit.vue";
@@ -44,11 +47,14 @@ export default {
       time: "all",
       times: ["hour", "day", "week", "month", "year", "all"],
       redditUrl: "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
-      map: []
+      map: [],
+      wordSelected: null,
+      posts: []
     }
   },
   components: {
     MyCloud,
+    Posts,
     Subreddit,
     Sort,
     Limit,
@@ -61,8 +67,11 @@ export default {
 
       this.redditUrl = "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
 
-      setTimeout(this.getPostsData(this.redditUrl).then(this.makeCloud()), 100);
+      setTimeout(this.ready, 100);
       // makeBar();
+    },
+    ready() {
+      this.getPostsData(this.redditUrl).then(this.makeCloud());
     },
     getPostsData(url)  {
       return promise.json(url, posts => {
@@ -104,12 +113,12 @@ export default {
     },
     addToMap(word, post)  {
       var index = null;
-          for (var i = 0; i < this.map.length; i++)  {
-            if (this.map[i].word === word) {
-              index = i;
-              break;
-            }
-          }
+      for (var i = 0; i < this.map.length; i++)  {
+        if (this.map[i].word === word) {
+          index = i;
+          break;
+        }
+      }
 
       if (index !== null) {
         this.map[i].occurrences++;
@@ -139,58 +148,60 @@ export default {
           });
 
         cloud()
-                .size([screen.width * 4/5, screen.height * 4/5])  // size of cloud
-                .words(words) // words to use in cloud
-                .rotate(0)  // rotation of words
-                .fontSize(function(d) { return d.size; }) // operates on each word
-                .on("end", this.draw)  // after making cloud, make image
-                .start(); // make cloud
+          .size([screen.width * 4/5, screen.height * 4/5])  // size of cloud
+          .words(words) // words to use in cloud
+          .rotate(0)  // rotation of words
+          .fontSize(function(d) { return d.size; }) // operates on each word
+          .on("end", this.drawCloud)  // after making cloud, make image
+          .start(); // make cloud
       }
       else  {
         setTimeout(this.makeCloud, 100);
       }
     },
-    draw(words) {
+    drawCloud(words) {
       var color = d3.scaleOrdinal(d3.schemeCategory10);
       
       d3.select(".cloud")
-              .append("svg")  // make HTML component
-              .attr("width", $("#cloud").width())  // size of container (svg)
-              .attr("height", $("#cloud").height())  // size of container (svg)
-              .attr("class", "wordcloud") // maake HTML class
-              .append("g")  // container element for svg
-              .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 2 + ")") // set center point of cloud
-              .selectAll("text")  // select all child elements
-              .data(words)  // data to use
-              .enter().append("text") // get data missing elements
-              .style("font-size", function(d) { return d.size + "px"; })  // use sizes set before
-              .style("fill", function(d, i) { return color(i); }) // get colorscheme
-              .attr("transform", function(d) {
-                  return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; // rotate words individually if desired
-              })
-              .text(d => { return d.text; })  // set text content
-              .on('mouseover', function(d){
-                  var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
-              })
-              .on('mouseout', function(d){
-                  var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
-              })
-              .on("click", d => {this.displayPosts(d.posts);});
+          .append("svg")  // make HTML component
+          .attr("width", $("#cloud").width())  // size of container (svg)
+          .attr("height", $("#cloud").height())  // size of container (svg)
+          .attr("class", "wordcloud") // maake HTML class
+          .append("g")  // container element for svg
+          .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 2 + ")") // set center point of cloud
+          .selectAll("text")  // select all child elements
+          .data(words)  // data to use
+          .enter().append("text") // get data missing elements
+          .style("font-size", function(d) { return d.size + "px"; })  // use sizes set before
+          .style("fill", function(d, i) { return color(i); }) // get colorscheme
+          .attr("transform", function(d) {
+              return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; // rotate words individually if desired
+          })
+          .text(d => { return d.text; })  // set text content
+          .on('mouseover', function(d){
+              var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
+          })
+          .on('mouseout', function(d){
+              var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
+          })
+          .on("click", d => {
+            this.wordSelected = d.text;
+            this.displayPosts(d.posts);
+          });
     },
     end(words) { 
       console.log(JSON.stringify(words));
     },
     displayPosts(posts) {
-      var jankLinks = "";
-
+      this.posts = [];
       posts.forEach(post => {
-        jankLinks += "<a href='" + post.link + "'>" + post.title + "</a><br /><br />";
+        this.posts.push(post);
       });
-    var myWindow = window.open("", "Posts with this word", "width=500,height=300");
-    myWindow.document.write(jankLinks);
     }
   },
-  mounted: this.setQuery
+  mounted: function() {
+    this.setQuery();
+  }
 }
 </script>
 
