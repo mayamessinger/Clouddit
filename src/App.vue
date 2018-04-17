@@ -40,7 +40,7 @@ var domParser = new DOMParser;
 const redditDomain = "https://www.reddit.com/"
 
 export default {
-  name: 'app',
+  name: "app",
   data() {
     return {
       subUser: "/r/",
@@ -237,37 +237,47 @@ export default {
     // make cloud SVG and display
     drawCloud(words) {
       var color = d3.scaleOrdinal(d3.schemeCategory10);
-
-      // http://bl.ocks.org/Kcnarf/ccf9bef19eb85ed6a3a7f99824c2ccb4
       
-      d3.select(".cloud")
+      var svg = d3.select(".cloud")
           .append("svg")  // make HTML component
           .attr("width", $("#cloud").width())  // size of container (svg)
           .attr("height", $("#cloud").height())  // size of container (svg)
-          .attr("class", "wordcloud") // maake HTML class
-          .append("g")  // container element for svg
-          .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 2 + ")") // set center point of cloud
-          .attr("text-anchor", "middle")
-          .selectAll("text")  // select all child elements
-          .data(words)  // data to use
-          .enter().append("text") // get data missing elements
-          .style("font-size", function(d) { return d.size + "px"; })  // use sizes set before
-          .style("fill", function(d, i) { return color(i); }) // get colorscheme
-          .attr("transform", function(d) {
-              return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; // rotate words individually if desired
-          })
-          .text(d => { return d.text; })  // set text content
-          .on('mouseover', function(d){
-              var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
+          .attr("class", "wordcloud"); // maake HTML class
+      
+      var g = svg.append("g");
 
-          })
-          .on('mouseout', function(d){
-              var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
-          })
-          .on("click", d => {
-            this.wordSelected = d.text;
-            this.displayPosts(d.posts);
+      var zoom = d3.zoom()
+          .scaleExtent([0.73, 5])
+          .on("zoom", function() {
+            g.attr("transform", d3.event.transform);
           });
+
+      svg.call(zoom);
+
+      g
+        .append("g")  // container element for svg
+        .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 2 + ")") // set center point of cloud
+        .attr("text-anchor", "middle")
+        .selectAll("text")  // select all child elements
+        .data(words)  // data to use
+        .enter().append("text") // get data missing elements
+        .style("font-size", function(d) { return d.size + "px"; })  // use sizes set before
+        .style("fill", function(d, i) { return color(i); }) // get colorscheme
+        .attr("transform", function(d) {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; // rotate words individually if desired
+        })
+        .text(d => { return d.text; })  // set text content
+        .on("mouseover", function(d){
+            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
+
+        })
+        .on("mouseout", function(d){
+            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
+        })
+        .on("click", d => {
+          this.wordSelected = d.text;
+          this.displayPosts(d.posts);
+        });
     },
     end(words) { 
       console.log(JSON.stringify(words));
