@@ -32,6 +32,7 @@ export default {
 
 <style lang="scss">
 .posts	{
-	margin: 2% 2%;
+	margin-left: 2%;
+  margin-right: 2%;
 }
 </style>

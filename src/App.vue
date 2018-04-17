@@ -15,7 +15,7 @@
         <timeO :time="time" :times="times" v-model="time"></timeO><br />
         <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
       </div>
-      <posts class="posts col-9" :word="wordSelected" :posts="posts">
+      <posts class="posts col-9" :word="wordSelected" :posts="postsSelected">
       </posts>
     </div>
   </div>
@@ -36,6 +36,8 @@ import Limit from "./components/Limit.vue";
 import LimitNum from "./components/LimitNum.vue";
 import TimeO from "./components/Time.vue";
 
+var domParser = new DOMParser;
+
 export default {
   name: 'app',
   data () {
@@ -49,7 +51,7 @@ export default {
       redditUrl: "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
       map: [],
       wordSelected: null,
-      posts: []
+      postsSelected: []
     }
   },
   components: {
@@ -64,6 +66,8 @@ export default {
   methods:  {
     setQuery() {
       this.map = [];
+      this.wordSelected = null;
+      this.postsSelected = [];
 
       this.redditUrl = "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
 
@@ -89,9 +93,10 @@ export default {
             });
     },
     prettify(word) {
-      var specialChars = "!@#*()[]{}|:;<>?,.\"";
-      word = word.replace(/&amp;/g, "&");
+      word = domParser.parseFromString(word, "text/html").body.textContent;
+      console.log(word);
 
+      var specialChars = "!@#*()[]{}|:;<>?,.\"";
       for (var i = 0; i < specialChars.length; i++) {
         word = word.replace(new RegExp("\\" + specialChars[i], "gi"), "");
       }
@@ -131,11 +136,16 @@ export default {
         });
 
         if (newPost) {
-          this.map[index].posts.push({title: post.data.title, subreddit: post.data.subreddit_name_prefixed, link: "https://reddit.com" + post.data.permalink});
+          this.map[index].posts.push({title: domParser.parseFromString(post.data.title, "text/html").body.textContent, 
+                                      subreddit: post.data.subreddit_name_prefixed,
+                                      link: "https://reddit.com" + post.data.permalink});
         }
       }
       else  {
-        this.map.push({word: word, occurrences: 1, posts: [{title: post.data.title, subreddit: post.data.subreddit_name_prefixed, link: "https://www.reddit.com" + post.data.permalink}]});
+        this.map.push({word: word, occurrences: 1, 
+          posts: [{title: domParser.parseFromString(post.data.title, "text/html").body.textContent,
+                  subreddit: post.data.subreddit_name_prefixed,
+                  link: "https://www.reddit.com" + post.data.permalink}]});
       }
     },
     makeCloud() {
@@ -144,7 +154,9 @@ export default {
       if (this.map.length > 1) {
         var words = this.map
           .map(function(d) {
-              return {text: d.word, posts: d.posts, size: d.occurrences * 10};
+              return {text: d.word,
+                      posts: d.posts,
+                      size: d.occurrences * 10};
           });
 
         cloud()
@@ -193,9 +205,9 @@ export default {
       console.log(JSON.stringify(words));
     },
     displayPosts(posts) {
-      this.posts = [];
+      this.postsSelected = [];
       posts.forEach(post => {
-        this.posts.push(post);
+        this.postsSelected.push(post);
       });
     }
   },

@@ -17,7 +17,7 @@ export default {
 
 <style lang="scss">
 .cloud	{
-	height: 50%;
+	height: 60%;
 	margin-top: 2%;
 }
 </style>
