@@ -37,7 +37,7 @@ var domParser = new DOMParser;
 
 export default {
   name: 'app',
-  data () {
+  data() {
     return {
       subreddit: "all",
       sort: "hot",
@@ -118,9 +118,12 @@ export default {
         this.excluded.splice(this.excluded.indexOf(word), 1);
         this.prevExcluded.push(this.prettify(word));
       }
-      else  {
+      else if (this.prevExcluded.includes(word))  {
         this.excluded.splice(0, 0, this.prettify(word));
         this.prevExcluded.splice(this.prevExcluded.indexOf(word), 1);
+      }
+      else  {
+        this.prevExcluded.splice(0, 0, this.prettify(word));
       }
 
       this.excluded.sort();

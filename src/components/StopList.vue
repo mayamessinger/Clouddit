@@ -2,6 +2,10 @@
   <div class="param stopList">
     This word cloud uses a stop list.<br />
     To re-include a word, please check it
+    <div>
+      <input type="text" placeholder="Add word" v-model="newStop" />
+      <button v-on:click="$emit('addBackWord', newStop)">Add</button>
+    </div>
     <div class="scrollable">
       <div v-for="word in oldStop">
         <input type="checkbox" value="word" :checked="true" v-on:change="$emit('addBackWord', word)" />{{word}}
@@ -16,6 +20,11 @@
 <script>
 export default {
   name: "StopList",
+  data() {
+    return {
+      newStop: null
+    }
+  },
   props:  [
     "stopList",
     "oldStop"
