@@ -56,6 +56,8 @@ export default {
       prevExcluded: [],
       wordSelected: null,
       postsSelected: [],
+      highestOccurrences: 0,
+      highestUpvotes: 0,
       weightOption: "upvotes",
       weightOptions: ["upvotes", "occurrences"]
     }
@@ -82,6 +84,8 @@ export default {
       this.map = [];
       this.wordSelected = null;
       this.postsSelected = [];
+      this.highestOccurrences = 0;
+      this.highestUpvotes = 0;
       this.getPostsData(this.redditUrl).then(this.makeCloud());
     },
     // get values from reddit JSON
@@ -112,6 +116,9 @@ export default {
 
       if (index !== null) {
         this.map[i].occurrences++;
+        if (this.map[i].occurrences > this.highestOccurrences) {
+          this.highestOccurrences = this.map[i].occurrences;
+        }
 
         var newPost = true;
         this.map[i].posts.forEach(loggedPost => {
@@ -122,6 +129,10 @@ export default {
 
         if (newPost) {
           this.map[i].upvotes += post.data.ups;
+          if (this.map[i].upvotes > this.highestUpvotes) {
+            this.highestUpvotes = this.map[i].upvotes;
+          }
+
           this.map[index].posts.push({title: domParser.parseFromString(post.data.title, "text/html").body.textContent, 
                                       subreddit: post.data.subreddit_name_prefixed,
                                       link: redditDomain + post.data.permalink,
@@ -129,6 +140,10 @@ export default {
         }
       }
       else  {
+        if (post.data.ups > this.highestUpvotes) {
+            this.highestUpvotes = post.data.ups;
+          }
+
         this.map.push({word: word,
                       occurrences: 1,
                       upvotes: post.data.ups,
@@ -194,7 +209,7 @@ export default {
           .size([screen.width * 4/5, screen.height * 4/5])  // size of cloud
           .words(words) // words to use in cloud
           .rotate(0)  // rotation of words
-          .fontSize(function(d) { return d.size; }) // operates on each word
+          .fontSize(d => { return d.size; }) // operates on each word
           .on("end", this.drawCloud)  // after making cloud, make image
           .start(); // make cloud
       }
@@ -213,26 +228,35 @@ export default {
     decideWeight() {
       if (this.weightOption === "upvotes") {
         var words = this.map
-          .map(function(d) {
-              return {text: d.word,
-                      occurrences: d.occurrences,
-                      upvotes: d.upvotes,
-                      posts: d.posts,
-                      size: d.upvotes/1000};
-          });
-      }
-      else if (this.weightOption === "occurrences")  {
-        var words = this.map
-        .map(function(d) {
+          .map(d => {
             return {text: d.word,
                     occurrences: d.occurrences,
                     upvotes: d.upvotes,
                     posts: d.posts,
-                    size: d.occurrences * 10};
+                    size: d.upvotes / this.highestUpvotes * 100};
+          });
+      }
+      else if (this.weightOption === "occurrences")  {
+        var words = this.map
+        .map(d => {
+          return {text: d.word,
+                  occurrences: d.occurrences,
+                  upvotes: d.upvotes,
+                  posts: d.posts,
+                  size: d.occurrences / this.highestOccurrences * 100};
         });
       }
 
       return words;
+    },
+    // calculate font sizes - relation to max instead of hard-coded
+    calcTextSize(value)  {
+      if (this.weightOption === "upvotes") {
+        return (value/this.highestUpvotes) * 100;
+      }
+      else if (this.weightOption === "occurrences")  {
+        return (value/this.highestOccurrences) * 40;
+      }
     },
     // make cloud SVG and display
     drawCloud(words) {
@@ -261,18 +285,18 @@ export default {
         .selectAll("text")  // select all child elements
         .data(words)  // data to use
         .enter().append("text") // get data missing elements
-        .style("font-size", function(d) { return d.size + "px"; })  // use sizes set before
+        .style("font-size", d => { return d.size + "px"; })  // use sizes set before
         .style("fill", function(d, i) { return color(i); }) // get colorscheme
-        .attr("transform", function(d) {
+        .attr("transform", d => {
             return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; // rotate words individually if desired
         })
         .text(d => { return d.text; })  // set text content
-        .on("mouseover", function(d){
-            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
+        .on("mouseover", d => {
+            var nodeSelection = d3.select(this).style("font-size", d => { return d.size + 20 + "px"; });
 
         })
-        .on("mouseout", function(d){
-            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
+        .on("mouseout", d => {
+            var nodeSelection = d3.select(this).style("font-size", d => { return d.size + "px"; });
         })
         .on("click", d => {
           this.wordSelected = d.text;

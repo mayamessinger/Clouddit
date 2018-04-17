@@ -1,18 +1,12 @@
-# final
+# CS 290 Final project
 
 > Reddit word cloud
 
-## Build Setup
+Maya Messinger (mm479)
+Started: 13 Apr 18
+Finished: 
+Hours spent: 15
 
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
-```
-
-For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
+### About the Project
+This project is a web application built using Node.js and Vue.js frameworks and [D3 libraries](https://d3js.org/) for the data visualization.
+Data is gathered from [Reddit](https://www.reddit.com/dev/api/) in JSON format, then parsed and organized into various data structures for display.
