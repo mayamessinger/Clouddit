@@ -154,7 +154,7 @@ export default {
     },
     // checks stopList, list of common words that will "clutter" a word cloud
     isExcluded(word) {
-      if (this.excluded.length > 1) {
+      if (this.excluded.length > 0) {
         if (this.excluded.includes(word)) {
           return true;
         }
@@ -187,7 +187,7 @@ export default {
     makeCloud() {
       d3.select("svg").remove();
 
-      if (this.map.length > 1) {
+      if (this.map.length > 0) {
         var words = this.decideWeight();
 
         cloud()
@@ -304,6 +304,7 @@ html  {
 
 body  {
   height: 100%;
+  margin: 0% 1%;
   width: 100%;
 }
 
@@ -321,6 +322,10 @@ body  {
 .row  {
   height: 100%;
   width: 100%;
+}
+
+svg {
+  border: 1px solid black;
 }
 
 .params {
