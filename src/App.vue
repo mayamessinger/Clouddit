@@ -9,6 +9,8 @@
         <limit :limit="limit" v-model="limit"></limit>
         <timeO :time="time" :times="times" :sort="sort" v-model="time"></timeO>
         <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
+        <stopList :stopList="excluded" :oldStop="prevExcluded" @addBackWord="addBackWord($event)">
+        </stopList>
       </div>
       <posts class="posts col-9" :word="wordSelected" :posts="postsSelected">
       </posts>
@@ -29,6 +31,7 @@ import Subreddit from "./components/Subreddit.vue";
 import Sort from "./components/Sort.vue";
 import Limit from "./components/Limit.vue";
 import TimeO from "./components/Time.vue";
+import StopList from "./components/StopList.vue";
 
 var domParser = new DOMParser;
 
@@ -44,6 +47,8 @@ export default {
       times: ["hour", "day", "week", "month", "year", "all"],
       redditUrl: "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
       map: [],
+      excluded: excluded.words,
+      prevExcluded: [],
       wordSelected: null,
       postsSelected: []
     }
@@ -54,20 +59,20 @@ export default {
     Subreddit,
     Sort,
     Limit,
-    TimeO
+    TimeO,
+    StopList
   },
   methods:  {
     setQuery() {
-      this.map = [];
-      this.wordSelected = null;
-      this.postsSelected = [];
-
       this.redditUrl = "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
 
       setTimeout(this.ready, 100);
       // makeBar();
     },
     ready() {
+      this.map = [];
+      this.wordSelected = null;
+      this.postsSelected = [];
       this.getPostsData(this.redditUrl).then(this.makeCloud());
     },
     getPostsData(url)  {
@@ -98,8 +103,8 @@ export default {
       return word;
     },
     isExcluded(word) {
-      if (excluded.words.length > 1) {
-        if (excluded.words.includes(word)) {
+      if (this.excluded.length > 1) {
+        if (this.excluded.includes(word)) {
           return true;
         }
         return false;
@@ -107,6 +112,21 @@ export default {
       else  {
         setTimeout(this.isExcluded(word), 100);
       }
+    },
+    addBackWord(word) {
+      if (this.excluded.includes(word)) {
+        this.excluded.splice(this.excluded.indexOf(word), 1);
+        this.prevExcluded.push(this.prettify(word));
+      }
+      else  {
+        this.excluded.splice(0, 0, this.prettify(word));
+        this.prevExcluded.splice(this.prevExcluded.indexOf(word), 1);
+      }
+
+      this.excluded.sort();
+      this.prevExcluded.sort();
+
+      setTimeout(this.ready(), 100);
     },
     addToMap(word, post)  {
       var index = null;
@@ -253,7 +273,7 @@ body  {
   border: none;
 }
 
-.param  {
+.param   {
   margin-left: 1%;
 }
 </style>
