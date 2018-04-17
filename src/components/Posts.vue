@@ -5,8 +5,8 @@
     </div>
     <div class="container">
       <div class="row" v-for="post in posts">
-        <div class="col-1">
-          Up
+        <div class="upvotes col-1">
+          &uarr; {{post.upvotes}}
         </div>
         <div class="col-7">
           {{post.subreddit}}: 
@@ -36,5 +36,10 @@ export default {
 	margin-left: 2%;
   margin-right: 2%;
   margin-top: 1%;
+}
+
+.upvotes  {
+  color: #FF8b60;
+  font-weight: bold;
 }
 </style>

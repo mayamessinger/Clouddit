@@ -9,6 +9,8 @@
         <limit :limit="limit" v-model="limit"></limit>
         <timeO :time="time" :times="times" :sort="sort" v-model="time"></timeO>
         <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
+        <changeWeight :weightOptions="weightOptions" @weigh="weigh($event)">
+        </changeWeight>
         <stopList :stopList="excluded" :oldStop="prevExcluded" @addBackWord="addBackWord($event)">
         </stopList>
       </div>
@@ -31,26 +33,31 @@ import Subreddit from "./components/Subreddit.vue";
 import Sort from "./components/Sort.vue";
 import Limit from "./components/Limit.vue";
 import TimeO from "./components/Time.vue";
+import ChangeWeight from "./components/ChangeWeight.vue";
 import StopList from "./components/StopList.vue";
 
 var domParser = new DOMParser;
+const redditDomain = "https://www.reddit.com/"
 
 export default {
   name: 'app',
   data() {
     return {
+      subUser: "/r/",
       subreddit: "all",
       sort: "hot",
       sorts: ["best", "hot", "new", "controversial", "top", "rising"],
       limit: 250,
       time: "",
       times: ["hour", "day", "week", "month", "year", "all"],
-      redditUrl: "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
+      redditUrl: redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
       map: [],
       excluded: excluded.words,
       prevExcluded: [],
       wordSelected: null,
-      postsSelected: []
+      postsSelected: [],
+      weightOption: "upvotes",
+      weightOptions: ["upvotes", "occurrences"]
     }
   },
   components: {
@@ -60,21 +67,24 @@ export default {
     Sort,
     Limit,
     TimeO,
+    ChangeWeight,
     StopList
   },
   methods:  {
+    // update query to reflect changed values
     setQuery() {
-      this.redditUrl = "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
+      this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
 
       setTimeout(this.ready, 100);
-      // makeBar();
     },
+    // call make map
     ready() {
       this.map = [];
       this.wordSelected = null;
       this.postsSelected = [];
       this.getPostsData(this.redditUrl).then(this.makeCloud());
     },
+    // get values from reddit JSON
     getPostsData(url)  {
       return promise.json(url, posts => {
               posts.data.children.forEach(post => {
@@ -90,8 +100,48 @@ export default {
               });
             });
     },
+    // check if word should be added to stored data, then do so if it hsould
+    addToMap(word, post)  {
+      var index = null;
+      for (var i = 0; i < this.map.length; i++)  {
+        if (this.map[i].word === word) {
+          index = i;
+          break;
+        }
+      }
+
+      if (index !== null) {
+        this.map[i].occurrences++;
+
+        var newPost = true;
+        this.map[i].posts.forEach(loggedPost => {
+          if (loggedPost.link === redditDomain + post.data.permalink) {
+            newPost = false;
+          }
+        });
+
+        if (newPost) {
+          this.map[i].upvotes += post.data.ups;
+          this.map[index].posts.push({title: domParser.parseFromString(post.data.title, "text/html").body.textContent, 
+                                      subreddit: post.data.subreddit_name_prefixed,
+                                      link: redditDomain + post.data.permalink,
+                                      upvotes: post.data.ups});
+        }
+      }
+      else  {
+        this.map.push({word: word,
+                      occurrences: 1,
+                      upvotes: post.data.ups,
+                      posts:
+                        [{title: domParser.parseFromString(post.data.title, "text/html").body.textContent,
+                          subreddit: post.data.subreddit_name_prefixed,
+                          link: redditDomain + post.data.permalink,
+                          upvotes: post.data.ups}]});
+      }
+    },
+    // universal formatting to make word cloud words not repeat
     prettify(word) {
-      word = domParser.parseFromString(word, "text/html").body.textContent;
+      word = domParser.parseFromString(word, "text/html").body.textContent; // parse HTML entites (like &nbsp;)
 
       var specialChars = "!@#*()[]{}|:;<>?,.\"";
       for (var i = 0; i < specialChars.length; i++) {
@@ -102,6 +152,7 @@ export default {
 
       return word;
     },
+    // checks stopList, list of common words that will "clutter" a word cloud
     isExcluded(word) {
       if (this.excluded.length > 1) {
         if (this.excluded.includes(word)) {
@@ -113,6 +164,7 @@ export default {
         setTimeout(this.isExcluded(word), 100);
       }
     },
+    // allows word to be added to or removed from stop list
     addBackWord(word) {
       if (this.excluded.includes(word)) {
         this.excluded.splice(this.excluded.indexOf(word), 1);
@@ -131,48 +183,12 @@ export default {
 
       setTimeout(this.ready(), 100);
     },
-    addToMap(word, post)  {
-      var index = null;
-      for (var i = 0; i < this.map.length; i++)  {
-        if (this.map[i].word === word) {
-          index = i;
-          break;
-        }
-      }
-
-      if (index !== null) {
-        this.map[i].occurrences++;
-
-        var newPost = true;
-        this.map[i].posts.forEach(loggedPost => {
-          if (loggedPost.title === post.data.title && loggedPost.subreddit === post.data.subreddit_name_prefixed) {
-            newPost = false;
-          }
-        });
-
-        if (newPost) {
-          this.map[index].posts.push({title: domParser.parseFromString(post.data.title, "text/html").body.textContent, 
-                                      subreddit: post.data.subreddit_name_prefixed,
-                                      link: "https://reddit.com" + post.data.permalink});
-        }
-      }
-      else  {
-        this.map.push({word: word, occurrences: 1, 
-          posts: [{title: domParser.parseFromString(post.data.title, "text/html").body.textContent,
-                  subreddit: post.data.subreddit_name_prefixed,
-                  link: "https://www.reddit.com" + post.data.permalink}]});
-      }
-    },
+    // set up to visualize cloud from word map
     makeCloud() {
       d3.select("svg").remove();
 
       if (this.map.length > 1) {
-        var words = this.map
-          .map(function(d) {
-              return {text: d.word,
-                      posts: d.posts,
-                      size: d.occurrences * 10};
-          });
+        var words = this.decideWeight();
 
         cloud()
           .size([screen.width * 4/5, screen.height * 4/5])  // size of cloud
@@ -186,8 +202,43 @@ export default {
         setTimeout(this.makeCloud, 100);
       }
     },
+    // changew how to weigh words
+    weigh(weight) {
+      if (this.weightOption !== weight) {
+        this.weightOption = weight;
+        this.setQuery();
+      }
+    },
+    // update word size mapping to reflect weight option
+    decideWeight() {
+      if (this.weightOption === "upvotes") {
+        var words = this.map
+          .map(function(d) {
+              return {text: d.word,
+                      occurrences: d.occurrences,
+                      upvotes: d.upvotes,
+                      posts: d.posts,
+                      size: d.upvotes/1000};
+          });
+      }
+      else if (this.weightOption === "occurrences")  {
+        var words = this.map
+        .map(function(d) {
+            return {text: d.word,
+                    occurrences: d.occurrences,
+                    upvotes: d.upvotes,
+                    posts: d.posts,
+                    size: d.occurrences * 10};
+        });
+      }
+
+      return words;
+    },
+    // make cloud SVG and display
     drawCloud(words) {
       var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+      // http://bl.ocks.org/Kcnarf/ccf9bef19eb85ed6a3a7f99824c2ccb4
       
       d3.select(".cloud")
           .append("svg")  // make HTML component
@@ -221,6 +272,7 @@ export default {
     end(words) { 
       console.log(JSON.stringify(words));
     },
+    // when word is clicked, show posts with word in them
     displayPosts(posts) {
       this.postsSelected = [];
       posts.forEach(post => {
