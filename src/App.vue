@@ -4,15 +4,10 @@
       <myCloud class="col-9" id="cloud">
       </myCloud>
       <div class="params col-3">
-        <label class="param">/r/</label>
-        <subreddit :subreddit="subreddit" v-model="subreddit"></subreddit><br />
-        <label class="param">Sort:</label>
-        <sort :sort="sort" :sorts="sorts" v-model="sort"></sort><br />
-        <label class="param"># of posts:</label>
+        <subreddit :subreddit="subreddit" v-model="subreddit"></subreddit>
+        <sort :sort="sort" :sorts="sorts" v-model="sort"></sort>
         <limit :limit="limit" v-model="limit"></limit>
-        <limitNum :limit="limit" v-model="limit"></limitNum><br />
-        <label class="param">Time range:</label>
-        <timeO :time="time" :times="times" v-model="time"></timeO><br />
+        <timeO :time="time" :times="times" :sort="sort" v-model="time"></timeO>
         <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
       </div>
       <posts class="posts col-9" :word="wordSelected" :posts="postsSelected">
@@ -33,7 +28,6 @@ import Posts from "./components/Posts.vue";
 import Subreddit from "./components/Subreddit.vue";
 import Sort from "./components/Sort.vue";
 import Limit from "./components/Limit.vue";
-import LimitNum from "./components/LimitNum.vue";
 import TimeO from "./components/Time.vue";
 
 var domParser = new DOMParser;
@@ -46,7 +40,7 @@ export default {
       sort: "hot",
       sorts: ["best", "hot", "new", "controversial", "top", "rising"],
       limit: 250,
-      time: "all",
+      time: "",
       times: ["hour", "day", "week", "month", "year", "all"],
       redditUrl: "https://www.reddit.com/r/" + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
       map: [],
@@ -60,7 +54,6 @@ export default {
     Subreddit,
     Sort,
     Limit,
-    LimitNum,
     TimeO
   },
   methods:  {
@@ -94,7 +87,6 @@ export default {
     },
     prettify(word) {
       word = domParser.parseFromString(word, "text/html").body.textContent;
-      console.log(word);
 
       var specialChars = "!@#*()[]{}|:;<>?,.\"";
       for (var i = 0; i < specialChars.length; i++) {
@@ -181,6 +173,7 @@ export default {
           .attr("class", "wordcloud") // maake HTML class
           .append("g")  // container element for svg
           .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 2 + ")") // set center point of cloud
+          .attr("text-anchor", "middle")
           .selectAll("text")  // select all child elements
           .data(words)  // data to use
           .enter().append("text") // get data missing elements
@@ -192,6 +185,7 @@ export default {
           .text(d => { return d.text; })  // set text content
           .on('mouseover', function(d){
               var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
+
           })
           .on('mouseout', function(d){
               var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });

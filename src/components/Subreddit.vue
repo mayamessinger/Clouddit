@@ -1,5 +1,8 @@
 <template>
-	<input id="subreddit" type="text" placeholder="subreddit (no /r/prefix)" v-bind:value="subreddit" v-on:input="$emit('input', $event.target.value)" />
+	<div>
+		<label class="param">/r/</label>
+		<input id="subreddit" type="text" placeholder="subreddit (no /r/prefix)" v-bind:value="subreddit" v-on:input="$emit('input', $event.target.value)" />
+	</div>
 </template>
 
 <script>
