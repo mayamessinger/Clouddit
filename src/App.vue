@@ -1,8 +1,8 @@
 <template>
   <div id="app" class="container">
-    <changeWeight :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
-    </changeWeight>
-    <div class="row">
+    <graphToggles :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
+    </graphToggles>
+    <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
       </myCloud>
       <div class="params col-3">
@@ -14,6 +14,8 @@
         <stopList :stopList="excluded" :oldStop="prevExcluded" @addBackWord="addBackWord($event)">
         </stopList>
       </div>
+    </div>
+    <div class="row">
       <posts class="posts col-9" :word="wordSelected" :posts="postsSelected">
       </posts>
     </div>
@@ -33,7 +35,7 @@ import Subreddit from "./components/Subreddit.vue";
 import Sort from "./components/Sort.vue";
 import Limit from "./components/Limit.vue";
 import TimeO from "./components/Time.vue";
-import ChangeWeight from "./components/ChangeWeight.vue";
+import GraphToggles from "./components/GraphToggles.vue";
 import StopList from "./components/StopList.vue";
 
 var domParser = new DOMParser;
@@ -58,6 +60,7 @@ export default {
       postsSelected: [],
       highestOccurrences: 0,
       highestUpvotes: 0,
+      lastUpdated: this.newTime(),
       weightOption: "upvotes",
       weightOptions: ["upvotes", "occurrences"]
     }
@@ -69,7 +72,7 @@ export default {
     Sort,
     Limit,
     TimeO,
-    ChangeWeight,
+    GraphToggles,
     StopList
   },
   methods:  {
@@ -81,12 +84,32 @@ export default {
     },
     // call make map
     ready() {
+      this.newTime();
       this.map = [];
       this.wordSelected = null;
       this.postsSelected = [];
       this.highestOccurrences = 0;
       this.highestUpvotes = 0;
       this.getPostsData(this.redditUrl).then(this.makeCloud());
+    },
+    // get last time query qas run for display
+    newTime() {
+      var d = new Date();
+      var h = d.getHours();
+      var m = d.getMinutes();
+      var s = d.getSeconds();
+
+      if (h < 10) {
+        h = "0" + h;
+      }
+      if (m < 10) {
+        m = "0" + m;
+      }
+      if (s < 10) {
+        s = "0" + s;
+      }
+
+      this.lastUpdated = h + ":" + m + ":" + s;
     },
     // get values from reddit JSON
     getPostsData(url)  {
@@ -186,7 +209,7 @@ export default {
         this.prevExcluded.push(this.prettify(word));
       }
       else if (this.prevExcluded.includes(word))  {
-        this.excluded.splice(0, 0, this.prettify(word));
+        this.excluded.push(this.prettify(word));
         this.prevExcluded.splice(this.prevExcluded.indexOf(word), 1);
       }
       else  {
@@ -260,6 +283,10 @@ export default {
     },
     // make cloud SVG and display
     drawCloud(words) {
+      this.map.forEach(wore => {
+        console.log(wore.word);
+      });
+
       var color = d3.scaleOrdinal(d3.schemeCategory10);
       
       var svg = d3.select(".cloud")
@@ -280,7 +307,7 @@ export default {
 
       g
         .append("g")  // container element for svg
-        .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 2 + ")") // set center point of cloud
+        .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 3 + ")") // set center point of cloud
         .attr("text-anchor", "middle")
         .selectAll("text")  // select all child elements
         .data(words)  // data to use
@@ -302,9 +329,6 @@ export default {
           this.wordSelected = d.text;
           this.displayPosts(d.posts);
         });
-    },
-    end(words) { 
-      console.log(JSON.stringify(words));
     },
     // when word is clicked, show posts with word in them
     displayPosts(posts) {
@@ -328,7 +352,7 @@ html  {
 
 body  {
   height: 100%;
-  margin: 0% 1%;
+  margin: 0%;
   width: 100%;
 }
 
@@ -344,13 +368,18 @@ body  {
   max-width: 100%;
 }
 
-.row  {
-  height: 100%;
+#visuals  {
+  height: 60%;
   width: 100%;
 }
 
 svg {
   border: 1px solid black;
+}
+
+.params {
+  height: 100%;
+  max-height: 100%;
 }
 
 .params input {

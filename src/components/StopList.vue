@@ -34,13 +34,13 @@ export default {
 
 <style lang="scss">
 .stopList {
-  height: 30%;
+  height: inherit;
   margin-top: 10%;
+  max-height: 15em;
 }
 
 .scrollable {
-  height: 100%;
-  max-height: 250px;
+  height: inherit;
   margin-top: 1%;
   overflow-y: scroll;
 }
