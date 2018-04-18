@@ -1,5 +1,7 @@
 <template>
   <div id="app" class="container">
+    <changeWeight :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
+    </changeWeight>
     <div class="row">
       <myCloud class="col-9" id="cloud">
       </myCloud>
@@ -9,8 +11,6 @@
         <limit :limit="limit" v-model="limit"></limit>
         <timeO :time="time" :times="times" :sort="sort" v-model="time"></timeO>
         <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
-        <changeWeight :weightOptions="weightOptions" @weigh="weigh($event)">
-        </changeWeight>
         <stopList :stopList="excluded" :oldStop="prevExcluded" @addBackWord="addBackWord($event)">
         </stopList>
       </div>
@@ -209,7 +209,7 @@ export default {
           .size([screen.width * 4/5, screen.height * 4/5])  // size of cloud
           .words(words) // words to use in cloud
           .rotate(0)  // rotation of words
-          .fontSize(d => { return d.size; }) // operates on each word
+          .fontSize(function(d) { return d.size; }) // operates on each word
           .on("end", this.drawCloud)  // after making cloud, make image
           .start(); // make cloud
       }
@@ -233,7 +233,7 @@ export default {
                     occurrences: d.occurrences,
                     upvotes: d.upvotes,
                     posts: d.posts,
-                    size: d.upvotes / this.highestUpvotes * 100};
+                    size: d.upvotes/1000};
           });
       }
       else if (this.weightOption === "occurrences")  {
@@ -243,7 +243,7 @@ export default {
                   occurrences: d.occurrences,
                   upvotes: d.upvotes,
                   posts: d.posts,
-                  size: d.occurrences / this.highestOccurrences * 100};
+                  size: d.occurrences + 20};
         });
       }
 
@@ -291,12 +291,12 @@ export default {
             return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; // rotate words individually if desired
         })
         .text(d => { return d.text; })  // set text content
-        .on("mouseover", d => {
-            var nodeSelection = d3.select(this).style("font-size", d => { return d.size + 20 + "px"; });
+        .on("mouseover", function(d){
+            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
 
         })
-        .on("mouseout", d => {
-            var nodeSelection = d3.select(this).style("font-size", d => { return d.size + "px"; });
+        .on("mouseout", function(d){
+            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
         })
         .on("click", d => {
           this.wordSelected = d.text;
@@ -334,6 +334,7 @@ body  {
 
 #app  {
   height: 100%;
+  margin-top: 3%;
   padding: 0;
   width: 100%;
 }
@@ -350,10 +351,6 @@ body  {
 
 svg {
   border: 1px solid black;
-}
-
-.params {
-  margin-top: 3%;
 }
 
 .params input {
