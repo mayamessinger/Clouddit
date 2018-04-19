@@ -1,7 +1,10 @@
 <template>
   <div id="app" class="container">
-    <graphToggles :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
-    </graphToggles>
+    <div id="toggleButtons" class="row">
+      <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
+      </graphToggles>
+      <login class="col-3" @login="login()"></login>
+    </div>
     <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
       </myCloud>
@@ -29,13 +32,14 @@ import * as d3 from "d3";
 import * as cloud from "d3-cloud";
 import * as promise from "d3.promise";
 
+import GraphToggles from "./components/GraphToggles.vue";
+import Login from "./components/Login.vue";
 import MyCloud from "./components/Cloud.vue";
 import Posts from "./components/Posts.vue";
 import Subreddit from "./components/Subreddit.vue";
 import Sort from "./components/Sort.vue";
 import Limit from "./components/Limit.vue";
 import TimeO from "./components/Time.vue";
-import GraphToggles from "./components/GraphToggles.vue";
 import StopList from "./components/StopList.vue";
 
 var domParser = new DOMParser;
@@ -66,13 +70,14 @@ export default {
     }
   },
   components: {
+    Login,
+    GraphToggles,
     MyCloud,
     Posts,
     Subreddit,
     Sort,
     Limit,
     TimeO,
-    GraphToggles,
     StopList
   },
   methods:  {
@@ -181,7 +186,7 @@ export default {
     prettify(word) {
       word = domParser.parseFromString(word, "text/html").body.textContent; // parse HTML entites (like &nbsp;)
 
-      var specialChars = "!@#*()[]{}|:;<>?,.\"";
+      var specialChars = "!@#*()[]{}|:;<>?,.\"`";
       for (var i = 0; i < specialChars.length; i++) {
         word = word.replace(new RegExp("\\" + specialChars[i], "gi"), "");
       }
@@ -256,7 +261,7 @@ export default {
                     occurrences: d.occurrences,
                     upvotes: d.upvotes,
                     posts: d.posts,
-                    size: d.upvotes/1000};
+                    size: d.upvotes / this.highestUpvotes * 100};
           });
       }
       else if (this.weightOption === "occurrences")  {
@@ -266,7 +271,7 @@ export default {
                   occurrences: d.occurrences,
                   upvotes: d.upvotes,
                   posts: d.posts,
-                  size: d.occurrences + 20};
+                  size: d.upvotes / this.highestUpvotes * 100};
         });
       }
 
@@ -336,6 +341,22 @@ export default {
       posts.forEach(post => {
         this.postsSelected.push(post);
       });
+    },
+    // login with reddit OAuth2
+    login() {
+      var client_id = "GeDalotx_uwLig";
+      var response_type = "code";
+      var state = Math.random().toString(36).substring(2);  // random string, check received back against sent to verify same request
+      var redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
+      var duration = "temporary";
+      var scope = "mysubreddits modposts";
+
+      window.open("https://www.reddit.com/api/v1/authorize?client_id=" + client_id +
+                  "&response_type=" + response_type +
+                  "&state=" + state +
+                  "&redirect_uri=" + redirect_uri +
+                  "&duration=" + duration +
+                  "&scope=" + scope);
     }
   },
   mounted: function() {
@@ -366,6 +387,10 @@ body  {
 .container  {
   margin: 0 0 0 0;
   max-width: 100%;
+}
+
+#toggleButtons  {
+  width: 100%;
 }
 
 #visuals  {

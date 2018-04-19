@@ -1,5 +1,5 @@
 <template>
-  <span class="toggles col-9">
+  <span class="toggles">
     <label>Weigh words by:</label>
     <button v-for="option in weightOptions" value="option" v-bind:class="{'chosen': (weightChosen === option)}" v-on:click="$emit('weigh', option)" >{{option}}</button>
     <span class="refresh">
@@ -25,6 +25,7 @@ export default {
   display: block;
 	font-size: 0.85em;
 	height: 3%;
+  padding: 0% 1.5%;
 	width: 100%;
 }
 
