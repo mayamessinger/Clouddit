@@ -5,7 +5,7 @@
 Maya Messinger (mm479)  
 Started: 13 Apr 18  
 Finished:   
-Hours spent: 15  
+Hours spent: 22
 
 ### About the Project
 This project is a web application built using Node.js and Vue.js frameworks and [D3 libraries](https://d3js.org/) for the data visualization.

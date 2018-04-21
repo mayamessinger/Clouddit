@@ -118,6 +118,8 @@ export default {
     },
     // get values from reddit JSON
     getPostsData(url)  {
+      // TODO:"oh no" if subreddit is empty
+
       return promise.json(url, posts => {
               posts.data.children.forEach(post => {
                 post.data.title.split(" ").forEach( word =>  {
@@ -132,7 +134,7 @@ export default {
               });
             });
     },
-    // check if word should be added to stored data, then do so if it hsould
+    // check if word should be added to stored data, then do so if it should
     addToMap(word, post)  {
       var index = null;
       for (var i = 0; i < this.map.length; i++)  {
@@ -392,8 +394,17 @@ export default {
           else if (error === "invalid_request")  {
           }
         }
+        else  {
+          // TODO: get user data
+          // TODO: change login button to logout, add user options as dropdown
+          // TODO: give buttons for subscribed
+          // TODO: button to view own posts/comments
+          // TODO: buttons for mods - delete post (report for users?)
+          // TODO: save prefs between sessions, per user
+        }
       }
     }
+    // TODO: make my data available as JSON for others
   },
   mounted: function() {
     this.setQuery();

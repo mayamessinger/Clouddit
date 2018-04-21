@@ -3,7 +3,7 @@
     This word cloud uses a stop list to filter common words.<br />
     To re-include a word, please check it below.
     <div>
-      <input type="text" placeholder="Add word" v-model="newStop" />
+      <input type="text" placeholder="Add word to filter" v-model="newStop" />
       <button v-on:click="$emit('addBackWord', newStop)">Add</button>
     </div>
     <div class="scrollable">
