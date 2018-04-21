@@ -271,7 +271,7 @@ export default {
                   occurrences: d.occurrences,
                   upvotes: d.upvotes,
                   posts: d.posts,
-                  size: d.upvotes / this.highestUpvotes * 100};
+                  size: d.occurrences / this.highestOccurrences * 100};
         });
       }
 
@@ -288,10 +288,6 @@ export default {
     },
     // make cloud SVG and display
     drawCloud(words) {
-      this.map.forEach(wore => {
-        console.log(wore.word);
-      });
-
       var color = d3.scaleOrdinal(d3.schemeCategory10);
       
       var svg = d3.select(".cloud")
@@ -347,7 +343,8 @@ export default {
       var client_id = "GeDalotx_uwLig";
       var response_type = "code";
       var state = Math.random().toString(36).substring(2);  // random string, check received back against sent to verify same request
-      var redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
+      // var redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
+      var redirect_uri = "http://localhost:8080";
       var duration = "temporary";
       var scope = "mysubreddits modposts";
 
@@ -356,11 +353,51 @@ export default {
                   "&state=" + state +
                   "&redirect_uri=" + redirect_uri +
                   "&duration=" + duration +
-                  "&scope=" + scope);
+                  "&scope=" + scope, "_self");
+    },
+    // check if user has logged in with reddit, to start opening up features to them
+    checkLogin()  {
+      var query = window.location.href;
+      if (query.includes("state")) {  // if loaded from reddit after oauth
+        var params = query.split("/?");
+        var args = params[1].split("&");
+
+        var errorEXP = /error=([a-z_]*)/i;
+        var error = null;
+        var stateEXP = /state=([a-zA-Z0-9]*)/i;
+        var state = null;
+        var codeEXP = /code=([a-zA-Z0-9_]*)/i;
+        var code = null;
+
+        args.forEach(param => {
+          if (param.match(errorEXP) != null) {
+            error = param.match(errorEXP)[1];
+          }
+          else if (param.match(stateEXP) != null) {
+            state = param.match(stateEXP)[1];
+          }
+          else if (param.match(codeEXP) != null) {
+            code = param.match(codeEXP)[1];
+          }
+        });
+
+        if (error != null) {
+          console.log(error + " for " + state);
+          if (error === "access_denied") {
+          }
+          else if (error === "unsupported_response_type")  {
+          }
+          else if (error === "invalid_scope")  {
+          }
+          else if (error === "invalid_request")  {
+          }
+        }
+      }
     }
   },
   mounted: function() {
     this.setQuery();
+    this.checkLogin();
   }
 }
 </script>
