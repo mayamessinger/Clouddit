@@ -3,7 +3,8 @@
     <div id="toggleButtons" class="row">
       <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
       </graphToggles>
-      <login class="col-3" @login="login()"></login>
+      <login class="col-3" v-if="loggedIn" @login="login()"></login>
+      <userOptions class="col-3" v-if="!loggedIn" :username="username"></userOptions>
     </div>
     <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
@@ -28,12 +29,14 @@
 <script>
 import excluded from "./assets/stopList2.json";
 import $ from "jquery";
+import bootstrap from "bootstrap";
 import * as d3 from "d3";
 import * as cloud from "d3-cloud";
 import * as promise from "d3.promise";
 
 import GraphToggles from "./components/GraphToggles.vue";
 import Login from "./components/Login.vue";
+import UserOptions from "./components/UserOptions.vue";
 import MyCloud from "./components/Cloud.vue";
 import Posts from "./components/Posts.vue";
 import Subreddit from "./components/Subreddit.vue";
@@ -49,6 +52,8 @@ export default {
   name: "app",
   data() {
     return {
+      loggedIn: false,
+      username: "D1sc0rd1a",
       subUser: "/r/",
       subreddit: "all",
       sort: "hot",
@@ -71,6 +76,7 @@ export default {
   },
   components: {
     Login,
+    UserOptions,
     GraphToggles,
     MyCloud,
     Posts,
@@ -395,6 +401,8 @@ export default {
           }
         }
         else  {
+          this.loggedIn = true;
+          this.username = "D1sc0rd1a";
           // TODO: get user data
           // TODO: change login button to logout, add user options as dropdown
           // TODO: give buttons for subscribed

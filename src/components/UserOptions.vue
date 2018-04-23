@@ -1,0 +1,37 @@
+<template>
+  <div class="redditUser dropdown">
+    <button class="btn btn-secondary dropdown-toggle" id="userDropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <img src="/src/assets/snoo.png" alt="snoo" height="15">
+      &nbsp;{{username}}
+    </button>
+    <ul class="dropdown-menu pull-right" aria-labelledby="userDropdown">
+      <li class="dropdown-item"><a href="#">Cloud my front page</a></li>
+      <li class="dropdown-item"><a href="#">Cloud my posts</a></li>
+      <li class="dropdown-item"><a href="#">Cloud my comments</a></li>
+    </ul>
+  </div>
+</template>
+
+<script>
+
+export default {
+  name: "UserOptions",
+  props:  [
+    "username"
+  ]
+}
+</script>
+
+<style lang="scss">
+.redditUser  {
+  display: block;
+  font-size: 0.85em;
+  height: 3%;
+  position: relative;
+  width: 100%;
+}
+
+#userDropdown  {
+  float: right;
+}
+</style>

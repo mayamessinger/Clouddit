@@ -1,6 +1,6 @@
 <template>
   <div class="redditLogin">
-    <button id="loginButton" @click="$emit('login', $event.target.value)">Login with Reddit</button>
+    <button class="btn btn-secondary" id="loginButton" @click="$emit('login', $event.target.value)">Login with Reddit</button>
   </div>
 </template>
 
