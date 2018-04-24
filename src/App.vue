@@ -3,8 +3,8 @@
     <div id="toggleButtons" class="row">
       <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
       </graphToggles>
-      <login class="col-3" v-if="loggedIn" @login="login()"></login>
-      <userOptions class="col-3" v-if="!loggedIn" :username="username"></userOptions>
+      <login class="col-3" v-if="!loggedIn" @login="login()"></login>
+      <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="" @userPosts="" @userComments="" @logout="logout()"></userOptions>
     </div>
     <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
@@ -30,6 +30,7 @@
 import excluded from "./assets/stopList2.json";
 import $ from "jquery";
 import bootstrap from "bootstrap";
+import * as firebase from "firebase";
 import * as d3 from "d3";
 import * as cloud from "d3-cloud";
 import * as promise from "d3.promise";
@@ -45,15 +46,30 @@ import Limit from "./components/Limit.vue";
 import TimeO from "./components/Time.vue";
 import StopList from "./components/StopList.vue";
 
+var config = {
+  apiKey: "AIzaSyB4jOZ7jdVqB7L71XhoSfHTQe7-imfGcfE",
+  authDomain: "clouddit-479.firebaseapp.com",
+  databaseURL: "https://clouddit-479.firebaseio.com",
+  projectId: "clouddit-479",
+  storageBucket: "clouddit-479.appspot.com",
+  messagingSenderId: "746195801558"
+};
+
+var db = firebase.initializeApp(config).database();
+var storageRef = firebase.storage().ref();
+var dbUsersRef = db.ref("users");
+
 var domParser = new DOMParser;
-const redditDomain = "https://www.reddit.com/"
+const redditDomain = "https://www.reddit.com/";
 
 export default {
   name: "app",
   data() {
     return {
+      client_id: "GeDalotx_uwLig",
       loggedIn: false,
-      username: "D1sc0rd1a",
+      username: null,
+      userToken: null,
       subUser: "/r/",
       subreddit: "all",
       sort: "hot",
@@ -348,15 +364,16 @@ export default {
     },
     // login with reddit OAuth2
     login() {
-      var client_id = "GeDalotx_uwLig";
-      var response_type = "code";
+      var response_type = "code"; // what want back from reddit
       var state = Math.random().toString(36).substring(2);  // random string, check received back against sent to verify same request
       // var redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
       var redirect_uri = "http://localhost:8080";
-      var duration = "temporary";
-      var scope = "mysubreddits modposts";
+      var duration = "temporary"; // 1 hour
+      var scope = "mysubreddits modposts";  // what this app wants to access
 
-      window.open("https://www.reddit.com/api/v1/authorize?client_id=" + client_id +
+      // TODO: push state to firebase
+
+      window.open("https://www.reddit.com/api/v1/authorize?client_id=" + this.client_id +
                   "&response_type=" + response_type +
                   "&state=" + state +
                   "&redirect_uri=" + redirect_uri +
@@ -368,7 +385,7 @@ export default {
       var query = window.location.href;
       if (query.includes("state")) {  // if loaded from reddit after oauth
         var params = query.split("/?");
-        var args = params[1].split("&");
+        var args = params[1].split("&");  // array of params, after domain
 
         var errorEXP = /error=([a-z_]*)/i;
         var error = null;
@@ -401,16 +418,41 @@ export default {
           }
         }
         else  {
-          this.loggedIn = true;
-          this.username = "D1sc0rd1a";
-          // TODO: get user data
-          // TODO: change login button to logout, add user options as dropdown
+          // TODO: check state against firebase (verified and unverified?)
+          $.ajax({
+            type: "POST",
+            url: "https://www.reddit.com/api/v1/access_token",
+            data: {grant_type: "authorization_code", code: code, redirect_uri: "http://localhost:8080"},
+            success: function(data) {
+              this.loggedIn = true;
+              this.userToken = data.access_token;
+            },
+            dataType: "json",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("Authorization", "Basic " + window.btoa("GeDalotx_uwLig" + ":" + "0WCPPtvbnnqhYKUIDHfN4Wdns7M"));
+            }
+          });
           // TODO: give buttons for subscribed
           // TODO: button to view own posts/comments
           // TODO: buttons for mods - delete post (report for users?)
           // TODO: save prefs between sessions, per user
         }
       }
+    },
+    logout()  {
+      $.ajax({
+            type: "POST",
+            url: "https://www.reddit.com/api/v1/revoke_token",
+            data: {token: this.userToken},
+            success: function(data) {
+              this.loggedIn = false;
+              this.userToken = null;
+            },
+            dataType: "json",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("Authorization", "Basic " + window.btoa("GeDalotx_uwLig" + ":" + "0WCPPtvbnnqhYKUIDHfN4Wdns7M"));
+            }
+          });
     }
     // TODO: make my data available as JSON for others
   },
