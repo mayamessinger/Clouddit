@@ -57,16 +57,19 @@ var config = {
 
 var db = firebase.initializeApp(config).database();
 var storageRef = firebase.storage().ref();
-var dbUsersRef = db.ref("users");
+var dbCodesRef = db.ref("codes");
 
 var domParser = new DOMParser;
 const redditDomain = "https://www.reddit.com/";
+const client_id = "GeDalotx_uwLig";
+const client_secret = "0WCPPtvbnnqhYKUIDHfN4Wdns7M";
+// const redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
+const redirect_uri = "http://localhost:8080";
 
 export default {
   name: "app",
   data() {
     return {
-      client_id: "GeDalotx_uwLig",
       loggedIn: false,
       username: null,
       userToken: null,
@@ -366,14 +369,12 @@ export default {
     login() {
       var response_type = "code"; // what want back from reddit
       var state = Math.random().toString(36).substring(2);  // random string, check received back against sent to verify same request
-      // var redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
-      var redirect_uri = "http://localhost:8080";
       var duration = "temporary"; // 1 hour
       var scope = "mysubreddits modposts";  // what this app wants to access
 
       // TODO: push state to firebase
 
-      window.open("https://www.reddit.com/api/v1/authorize?client_id=" + this.client_id +
+      window.open("https://www.reddit.com/api/v1/authorize?client_id=" + client_id +
                   "&response_type=" + response_type +
                   "&state=" + state +
                   "&redirect_uri=" + redirect_uri +
@@ -389,9 +390,9 @@ export default {
 
         var errorEXP = /error=([a-z_]*)/i;
         var error = null;
-        var stateEXP = /state=([a-zA-Z0-9]*)/i;
+        var stateEXP = /state=(\S*)/i;
         var state = null;
-        var codeEXP = /code=([a-zA-Z0-9_]*)/i;
+        var codeEXP = /code=(\S*)/i;
         var code = null;
 
         args.forEach(param => {
@@ -409,35 +410,59 @@ export default {
         if (error != null) {
           console.log(error + " for " + state);
           if (error === "access_denied") {
+            alert("Login request was not approved");
           }
           else if (error === "unsupported_response_type")  {
+            alert("Unable to log in, but it's the developer's fault, not yours.");
+            console.log("response_type not token");
           }
           else if (error === "invalid_scope")  {
+            alert("Unable to log in, but it's the developer's fault, not yours.");
+            console.log("invalid_scope");
           }
           else if (error === "invalid_request")  {
+            alert("Unable to log in, but it's the developer's fault, not yours.");
+            console.log("Bad authorization, invalid_request");
           }
         }
         else  {
-          // TODO: check state against firebase (verified and unverified?)
-          $.ajax({
-            type: "POST",
-            url: "https://www.reddit.com/api/v1/access_token",
-            data: {grant_type: "authorization_code", code: code, redirect_uri: "http://localhost:8080"},
-            success: function(data) {
-              this.loggedIn = true;
-              this.userToken = data.access_token;
-            },
-            dataType: "json",
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader("Authorization", "Basic " + window.btoa("GeDalotx_uwLig" + ":" + "0WCPPtvbnnqhYKUIDHfN4Wdns7M"));
-            }
-          });
-          // TODO: give buttons for subscribed
-          // TODO: button to view own posts/comments
-          // TODO: buttons for mods - delete post (report for users?)
-          // TODO: save prefs between sessions, per user
+          this.codeExists(code);
         }
       }
+    },
+    codeExists(code) {
+      dbCodesRef.orderByChild("code").equalTo(code).once("value", snapshot => {
+          const codeData = snapshot.val();
+          if (codeData !== null) {
+            this.getTokenDB(code);
+          }
+          else  {
+            this.getTokenNew(code);
+          }
+      });
+    },
+    getTokenDB(code)  {
+    },
+    getTokenNew(code)  {
+      $.ajax({
+        type: "POST",
+        url: "https://www.reddit.com/api/v1/access_token",
+        data: {grant_type: "authorization_code", code: code, redirect_uri: redirect_uri},
+        success: data => {
+          this.loggedIn = true;
+          this.userToken = data.access_token;
+        },
+        dataType: "json",
+        beforeSend:  xhr => {
+            xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
+        }
+      })
+      .then(d => dbCodesRef.push({code: code, token: this.userToken}));
+          
+      // TODO: give buttons for subscribed
+      // TODO: button to view own posts/comments
+      // TODO: buttons for mods - delete post (report for users?)
+      // TODO: save prefs between sessions, per user
     },
     logout()  {
       $.ajax({
@@ -449,8 +474,8 @@ export default {
               this.userToken = null;
             },
             dataType: "json",
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader("Authorization", "Basic " + window.btoa("GeDalotx_uwLig" + ":" + "0WCPPtvbnnqhYKUIDHfN4Wdns7M"));
+            beforeSend: xhr => {
+                xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
             }
           });
     }
@@ -458,6 +483,7 @@ export default {
   },
   mounted: function() {
     this.setQuery();
+    // perpetuate login
     this.checkLogin();
   }
 }
