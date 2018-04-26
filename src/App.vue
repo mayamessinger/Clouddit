@@ -5,7 +5,6 @@
       </graphToggles>
       <login class="col-3" v-if="!loggedIn" @login="login()"></login>
       <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="" @userPosts="" @userComments="" @logout="logout()"></userOptions>
-      <button @click="getUsername()">username</button>
     </div>
     <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
@@ -434,19 +433,22 @@ export default {
       }
     },
     codeExists(code) {
-      dbCodesRef.orderByChild("code").equalTo(code).once("value", snapshot => {
-          const codeData = snapshot.val();
-          if (codeData !== null) {
-            this.getTokenDB(code);
-          }
-          else  {
-            this.getTokenNew(code);
-          }
+      dbCodesRef.child(code).once("value", snapshot => {
+        const codeData = snapshot.val();
+        if (codeData !== null) {
+          this.getTokenDB(code);
+        }
+        else  {
+          this.getTokenNew(code);
+        }
       });
     },
     getTokenDB(code)  {
-      // TODO: get token from firebase
-      // this.getUsername();
+      dbCodesRef.child(code).once("value", snapshot => {
+        const codeData = snapshot.val();
+        this.userToken = codeData.token;
+      })
+      .then(this.getUsername());
     },
     getTokenNew(code)  {
       $.ajax({
@@ -462,11 +464,11 @@ export default {
           this.userToken = data.access_token;
           this.getUsername();
         }
-        // beforeSend:  xhr => {
-        //   xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
-        // }
       })
-      .then(d => dbCodesRef.push({code: code, token: this.userToken}));
+      .then(d => dbCodesRef.child(code).set({
+          token: this.userToken,
+          timePush: "now"
+      }));
           
       // TODO: give buttons for subscribed
       // TODO: button to view own posts/comments
@@ -474,17 +476,24 @@ export default {
       // TODO: save prefs between sessions, per user
     },
     getUsername() {
-      $.ajax({
-        type: "GET",
-        url: "https://oauth.reddit.com/api/v1/me",
-        beforeSend: xhr => {
-          xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
-        },
-        dataType: "json",
-        success: data => {
-          this.username = data.name;
-        }
-      });
+      if (this.userToken !== null) {
+        $.ajax({
+          type: "GET",
+          url: "https://oauth.reddit.com/api/v1/me",
+          beforeSend: xhr => {
+            xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+          },
+          dataType: "json",
+          success: data => {
+            this.loggedIn = true;
+            this.username = data.name;
+            console.log(data);
+          }
+        });
+      }
+      else  {
+        setTimeout(this.getUsername, 100);
+      }
     },
     logout()  {
       $.ajax({
