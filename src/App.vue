@@ -5,6 +5,7 @@
       </graphToggles>
       <login class="col-3" v-if="!loggedIn" @login="login()"></login>
       <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="" @userPosts="" @userComments="" @logout="logout()"></userOptions>
+      <button @click="getUsername()">username</button>
     </div>
     <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
@@ -191,7 +192,8 @@ export default {
           this.map[index].posts.push({title: domParser.parseFromString(post.data.title, "text/html").body.textContent, 
                                       subreddit: post.data.subreddit_name_prefixed,
                                       link: redditDomain + post.data.permalink,
-                                      upvotes: post.data.ups});
+                                      upvotes: post.data.ups,
+                                      nsfw: post.data.over_18});
         }
       }
       else  {
@@ -206,7 +208,8 @@ export default {
                         [{title: domParser.parseFromString(post.data.title, "text/html").body.textContent,
                           subreddit: post.data.subreddit_name_prefixed,
                           link: redditDomain + post.data.permalink,
-                          upvotes: post.data.ups}]});
+                          upvotes: post.data.ups,
+                          nsfw: post.data.over_18}]});
       }
     },
     // universal formatting to make word cloud words not repeat
@@ -370,7 +373,7 @@ export default {
       var response_type = "code"; // what want back from reddit
       var state = Math.random().toString(36).substring(2);  // random string, check received back against sent to verify same request
       var duration = "temporary"; // 1 hour
-      var scope = "mysubreddits modposts";  // what this app wants to access
+      var scope = "identity mysubreddits modposts";  // what this app wants to access
 
       // TODO: push state to firebase
 
@@ -442,20 +445,26 @@ export default {
       });
     },
     getTokenDB(code)  {
+      // TODO: get token from firebase
+      // this.getUsername();
     },
     getTokenNew(code)  {
       $.ajax({
         type: "POST",
         url: "https://www.reddit.com/api/v1/access_token",
+        beforeSend: xhr => {
+          xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
+        },
         data: {grant_type: "authorization_code", code: code, redirect_uri: redirect_uri},
+        dataType: "json",
         success: data => {
           this.loggedIn = true;
           this.userToken = data.access_token;
-        },
-        dataType: "json",
-        beforeSend:  xhr => {
-            xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
+          this.getUsername();
         }
+        // beforeSend:  xhr => {
+        //   xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
+        // }
       })
       .then(d => dbCodesRef.push({code: code, token: this.userToken}));
           
@@ -464,20 +473,34 @@ export default {
       // TODO: buttons for mods - delete post (report for users?)
       // TODO: save prefs between sessions, per user
     },
+    getUsername() {
+      $.ajax({
+        type: "GET",
+        url: "https://oauth.reddit.com/api/v1/me",
+        beforeSend: xhr => {
+          xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+        },
+        dataType: "json",
+        success: data => {
+          this.username = data.name;
+        }
+      });
+    },
     logout()  {
       $.ajax({
-            type: "POST",
-            url: "https://www.reddit.com/api/v1/revoke_token",
-            data: {token: this.userToken},
-            success: function(data) {
-              this.loggedIn = false;
-              this.userToken = null;
-            },
-            dataType: "json",
-            beforeSend: xhr => {
-                xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
-            }
-          });
+        type: "POST",
+        url: "https://www.reddit.com/api/v1/revoke_token",
+        beforeSend: xhr => {
+          xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
+        },
+        data: {token: this.userToken},
+        dataType: "json",
+        success: data => {
+          this.loggedIn = false;
+          this.userToken = null;
+          // TODO: remove from firebase
+        }
+      });
     }
     // TODO: make my data available as JSON for others
   },

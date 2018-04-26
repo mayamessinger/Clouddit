@@ -8,9 +8,10 @@
         <div class="upvotes col-1">
           &uarr; {{post.upvotes}}
         </div>
-        <div class="col-7">
+        <div class="col-8">
           {{post.subreddit}}: 
-          <a :href="post.link">{{post.title}}</a><br /><br />
+          <a :href="post.link">{{post.title}}</a>
+          <span v-if="post.nsfw" v-bind:class="{nsfwFlair: post.nsfw}">NSFW</span><br /><br />
         </div>
       </div>
     </div>
@@ -41,5 +42,9 @@ export default {
 .upvotes  {
   color: #FF8b60;
   font-weight: bold;
+}
+
+.nsfwFlair  {
+  color: red;
 }
 </style>
