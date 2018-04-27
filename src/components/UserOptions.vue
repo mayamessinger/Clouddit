@@ -5,10 +5,10 @@
       &nbsp;{{username}}
     </button>
     <ul class="dropdown-menu pull-right" aria-labelledby="userDropdown">
-      <li class="dropdown-item"><a href="#" @click="$emit('frontPage')">Cloud my front page</a></li>
-      <li class="dropdown-item"><a href="#" @click="$emit('userPosts')">Cloud my posts</a></li>
-      <li class="dropdown-item"><a href="#" @click="$emit('userComments')">Cloud my comments</a></li>
-      <li class="dropdown-item"><a href="#" @click="$emit('logout')">Logout</a></li>
+      <li class="dropdown-item"><a href="" @click="$emit('frontPage')">Cloud my front page</a></li>
+      <li class="dropdown-item"><a href="" @click="$emit('userPosts')">Cloud my posts</a></li>
+      <li class="dropdown-item"><a href="" @click="$emit('userComments')">Cloud my comments</a></li>
+      <li class="dropdown-item"><a href="" @click="$emit('logout')">Logout</a></li>
     </ul>
   </div>
 </template>

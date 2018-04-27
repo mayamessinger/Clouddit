@@ -4,7 +4,7 @@
       <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
       </graphToggles>
       <login class="col-3" v-if="!loggedIn" @login="login()"></login>
-      <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="" @userPosts="" @userComments="" @logout="logout()"></userOptions>
+      <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="frontPage()" @userPosts="" @userComments="" @logout="logout()"></userOptions>
     </div>
     <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
@@ -73,7 +73,7 @@ export default {
       loggedIn: false,
       username: null,
       userToken: null,
-      subUser: "/r/",
+      subUser: "r/",
       subreddit: "all",
       sort: "hot",
       sorts: ["best", "hot", "new", "controversial", "top", "rising"],
@@ -143,21 +143,31 @@ export default {
     },
     // get values from reddit JSON
     getPostsData(url)  {
-      // TODO:"oh no" if subreddit is empty
-
       return promise.json(url, posts => {
-              posts.data.children.forEach(post => {
-                post.data.title.split(" ").forEach( word =>  {
-                  word = this.prettify(word);
+        if (posts === null) {
+          this.emptySub();
+          return;
+        }
 
-                  if (this.isExcluded(word)) {
-                    return;
-                  }
-                  
-                  this.addToMap(word, post);
-                });
-              });
-            });
+        this.parsePosts(posts);
+      });
+    },
+    parsePosts(posts)  {
+      posts.data.children.forEach(post => {
+        post.data.title.split(" ").forEach( word =>  {
+          word = this.prettify(word);
+
+          if (this.isExcluded(word)) {
+            return;
+          }
+          
+          this.addToMap(word, post);
+        });
+      });
+    },
+    // alert about bad subreddit call
+    emptySub()  {
+      alert("Oh no! Looks like /r/" + this.subreddit + " doesn't exist!");
     },
     // check if word should be added to stored data, then do so if it should
     addToMap(word, post)  {
@@ -374,8 +384,6 @@ export default {
       var duration = "temporary"; // 1 hour
       var scope = "identity mysubreddits modposts";  // what this app wants to access
 
-      // TODO: push state to firebase
-
       window.open("https://www.reddit.com/api/v1/authorize?client_id=" + client_id +
                   "&response_type=" + response_type +
                   "&state=" + state +
@@ -465,15 +473,14 @@ export default {
           this.getUsername();
         }
       })
-      .then(d => dbCodesRef.child(code).set({
+      .then(d => {
+        var time = new Date();
+
+        dbCodesRef.child(code).set({
           token: this.userToken,
-          timePush: "now"
-      }));
-          
-      // TODO: give buttons for subscribed
-      // TODO: button to view own posts/comments
-      // TODO: buttons for mods - delete post (report for users?)
-      // TODO: save prefs between sessions, per user
+          timePush: time // TODO: push time and removing after an hour
+        })
+      });
     },
     getUsername() {
       if (this.userToken !== null) {
@@ -495,6 +502,26 @@ export default {
         setTimeout(this.getUsername, 100);
       }
     },
+    // retrieve user's subscribed subreddits and set a multireddit to emulate user's "front page"
+    frontPage() {
+      $.ajax({
+        type: "GET",
+        url: "https://oauth.reddit.com/subreddits/mine/?limit=100", // limited to 100 subreddits, sadly
+        beforeSend: xhr => {
+          xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+        },
+        dataType: "json",
+        success: subs => {
+          this.subreddit = "";
+
+          subs.data.children.forEach(sub => {
+            this.subreddit += sub.data.display_name + "+"
+          });
+
+          this.setQuery();
+        }
+      });
+    },
     logout()  {
       $.ajax({
         type: "POST",
@@ -507,7 +534,8 @@ export default {
         success: data => {
           this.loggedIn = false;
           this.userToken = null;
-          // TODO: remove from firebase
+          dbCodesRef.remove(this.code);
+          window.open(redirect_uri, "_self");
         }
       });
     }
