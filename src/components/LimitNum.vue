@@ -1,5 +1,5 @@
 <template>
-		<input id="limitNum" type="text" size="1" placeholder="250" v-bind:value="limit" v-on:input="$emit('input', $event.target.value)" />
+		<input id="limitNum" type="text" size="1" placeholder="50" v-bind:value="limit" v-on:input="$emit('input', $event.target.value)" />
 </template>
 
 <script>

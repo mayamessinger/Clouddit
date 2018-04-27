@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="ru === 'r/'">
     <label class="param">Sort:</label>
     <select id="sort" v-bind:value="sort" v-on:input="$emit('input', $event.target.value)">
       <option disabled value="">Sort</option>
@@ -15,7 +15,8 @@ export default {
   name: "Sort",
   props:  [
     "sorts",
-    "sort"
+    "sort",
+    "ru"
   ]
 }
 </script>

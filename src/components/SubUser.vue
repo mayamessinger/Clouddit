@@ -1,6 +1,6 @@
 <template>
   <span class="param">
-    <select id="sr" v-bind:value="sr" v-on:input="$emit('input', $event.target.value)">
+    <select id="ru" v-bind:value="ru" v-on:input="$emit('input', $event.target.value)">
       <option>
         r/
       </option>
@@ -15,7 +15,7 @@
 export default {
   name: "SubUser",
   props:  [
-    "sr"
+    "ru"
   ]
 }
 </script>

@@ -15,7 +15,7 @@ https://www.reddit.com/api/v1/authorize?client_id=CLIENT_ID&response_type=TYPE&s
 * duration = temporary or permanent
 * scope = identity, edit, flair, history, modconfig, modflair, modlog, modposts, modwiki, mysubreddits, privatemessages, read, report, save, submit, subscribe, vote, wikiedit, wikiread
 	* mysubreddits
-	* modposts
+	* modposts	
 	* submitted
 	* comments
 
