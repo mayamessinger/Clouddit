@@ -1,10 +1,12 @@
 <template>
   <span class="toggles">
-    <label>Weigh words by:</label>
-    <button v-for="option in weightOptions" value="option" v-bind:class="{'chosen': (weightChosen === option)}" v-on:click="$emit('weigh', option)" >{{option}}</button>
+    Weigh words by:
+    <span id="weightButtons">
+      <button v-for="option in weightOptions" value="option" v-bind:class="{'chosen': (weightChosen === option)}" v-on:click="$emit('weigh', option)" >{{option}}</button>
+    </span>
     <span class="refresh">
-    	<button v-on:click="$emit('refresh')">&#8635;</button>
-    	<label v-if="lastUpdated !== null" id="refreshLast">Last refreshed at {{lastUpdated}}</label>
+    	<button id="refreshButton" v-on:click="$emit('refresh')">&#8635;</button>
+    	<span id="refreshLast" v-if="lastUpdated !== null">Last refreshed at {{lastUpdated}}</span>
     </span>
 	</span>
 </template>

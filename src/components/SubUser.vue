@@ -1,5 +1,6 @@
 <template>
-  <span class="param">
+  <div class="param">
+    <label for="ru">Type:</label>
     <select id="ru" v-bind:value="ru" v-on:input="$emit('input', $event.target.value)">
       <option>
         r/
@@ -8,7 +9,7 @@
         user/
       </option>
     </select>
-	</span>
+	</div>
 </template>
 
 <script>

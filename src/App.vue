@@ -21,7 +21,7 @@
       </div>
     </div>
     <div class="row">
-      <entries class="entries col-9" :word="wordSelected" :entries="entriesSelected" @visComs="postComments($event)">
+      <entries class="entries col-9" :word="wordSelected" :entries="entriesSelected" @visComs="entryReplies($event)">
       </entries>
     </div>
   </div>
@@ -74,6 +74,7 @@ export default {
     return {
       loggedIn: false,
       username: null,
+      userCode: null,
       userToken: null,
       subUser: "r/",
       subreddit: "all",
@@ -424,7 +425,8 @@ export default {
         this.entriesSelected.push(entry);
       });
     },
-    postComments(post)  {
+    // visualize the replies to a post or comment
+    entryReplies(post)  {
       this.redditUrl = post.link + ".json?limit=" + this.limit + "&t=" + this.time;
       this.ready();
     },
@@ -454,7 +456,6 @@ export default {
         var stateEXP = /state=(\S*)/i;
         var state = null;
         var codeEXP = /code=(\S*)/i;
-        var code = null;
 
         args.forEach(param => {
           if (param.match(errorEXP) != null) {
@@ -464,7 +465,7 @@ export default {
             state = param.match(stateEXP)[1];
           }
           else if (param.match(codeEXP) != null) {
-            code = param.match(codeEXP)[1];
+            this.userCode = param.match(codeEXP)[1];
           }
         });
 
@@ -487,38 +488,39 @@ export default {
           }
         }
         else  {
-          this.codeExists(code);
+          this.codeExists();
         }
       }
     },
-    codeExists(code) {
-      code = code.replace(new RegExp("\\" + "#", "gi"), "");
-
-      dbCodesRef.child(code).once("value", snapshot => {
+    // if code exists as entry in firebase, determines if need to get new token or token from db
+    codeExists() {
+      dbCodesRef.child(this.userCode).once("value", snapshot => {
         const codeData = snapshot.val();
         if (codeData !== null) {
-          this.getTokenDB(code);
+          this.getTokenDB();
         }
         else  {
-          this.getTokenNew(code);
+          this.getTokenNew();
         }
       });
     },
-    getTokenDB(code)  {
-      dbCodesRef.child(code).once("value", snapshot => {
+    // get previously-authorized authorization token from firebase
+    getTokenDB()  {
+      dbCodesRef.child(this.userCode).once("value", snapshot => {
         const codeData = snapshot.val();
         this.userToken = codeData.token;
       })
       .then(this.getUsername());
     },
-    getTokenNew(code)  {
+    // get reddit authorization_token from reddit, does not exist in database
+    getTokenNew()  {
       $.ajax({
         type: "POST",
         url: "https://www.reddit.com/api/v1/access_token",
         beforeSend: xhr => {
           xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
         },
-        data: {grant_type: "authorization_code", code: code, redirect_uri: redirect_uri},
+        data: {grant_type: "authorization_code", code: this.userCode, redirect_uri: redirect_uri},
         dataType: "json",
         success: data => {
           this.loggedIn = true;
@@ -527,14 +529,15 @@ export default {
         }
       })
       .then(d => {
-        var time = new Date();
+        var timePut = Date.now()/1000;
 
-        dbCodesRef.child(code).set({
+        dbCodesRef.child(this.userCode).set({
           token: this.userToken,
-          timePush: time // TODO: push time and removing after an hour
+          timePush: timePut.toString()
         })
       });
     },
+    // get username of logged on user after login or refresh
     getUsername() {
       if (this.userToken !== null) {
         $.ajax({
@@ -558,7 +561,7 @@ export default {
     frontPage() {
       $.ajax({
         type: "GET",
-        url: "https://oauth.reddit.com/subreddits/mine/?limit=100", // limited to 100 subreddits, sadly
+        url: "https://oauth.reddit.com/subreddits/mine/?limit=100",
         beforeSend: xhr => {
           xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
         },
@@ -574,17 +577,19 @@ export default {
         }
       });
     },
-    // retrieve user's comment
+    // retrieve user's posts to visualize
     userPosts() {
       this.subUser = "user/";
       this.subreddit = this.username + "/submitted";
       this.setQuery();
     },
+    // retrieve user's comments to visualize
     userComments() {
       this.subUser = "user/"
       this.subreddit = this.username + "/comments";
       this.setQuery();
     },
+    // TODO; mod options for posts
     logout()  {
       $.ajax({
         type: "POST",
@@ -595,18 +600,39 @@ export default {
         data: {token: this.userToken},
         dataType: "json",
         success: data => {
+          dbCodesRef.child(this.userCode).remove();
           this.loggedIn = false;
+          this.userCode = null;
           this.userToken = null;
-          dbCodesRef.remove(this.code);
           window.open(redirect_uri, "_self");
         }
       });
+    },
+    // clears old (expired) tokens from Firebase (expire after 1 hour)
+    clearOldCodes() {
+      var toRemove = [];
+
+      dbCodesRef.on("value", snapshot => {
+        snapshot.forEach(item => {
+          if ((Date.now()/1000) - parseInt(item.node_.children_.root_.left.value.value_) >= 3600) {
+            toRemove.push(item.key);
+          }
+        });
+      });
+
+      setTimeout(
+        d => {
+          toRemove.forEach( key => {
+            dbCodesRef.child(key).remove();
+          });
+        },
+      3000);
     }
     // TODO: make my data available as JSON for others
   },
   mounted: function() {
+    this.clearOldCodes();
     this.setQuery();
-    // perpetuate login
     this.checkLogin();
   }
 }

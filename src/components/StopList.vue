@@ -3,15 +3,18 @@
     This word cloud uses a stop list to filter common words.<br />
     To re-include a word, please check it below.
     <div>
-      <input type="text" placeholder="Add word to filter" v-model="newStop" />
+      <label for="addWord">Add word to filter</label>
+      <input type="text" id="addWord" v-model="newStop" />
       <button v-on:click="$emit('addBackWord', newStop)">Add</button>
     </div>
     <div class="scrollable">
       <div v-for="word in oldStop">
-        <input type="checkbox" value="word" :checked="true" v-on:change="$emit('addBackWord', word)" />{{word}}
+        <input v-bind:id="word" type="checkbox" value="word" :checked="true" v-on:change="$emit('addBackWord', word)" />
+        <label v-bind:for="word">{{word}}</label>
       </div>
       <div v-for="word in stopList">
-        <input type="checkbox" value="word" :checked="false" v-on:change="$emit('addBackWord', word)" />{{word}}
+        <input v-bind:id="word" type="checkbox" value="word" :checked="false" v-on:change="$emit('addBackWord', word)" />
+        <label v-bind:for="word">{{word}}</label>
       </div>
     </div>
   </div>
