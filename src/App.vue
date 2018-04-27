@@ -1,5 +1,6 @@
 <template>
   <div id="app" class="container">
+    <devInfo></devInfo>
     <div id="toggleButtons" class="row">
       <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
       </graphToggles>
@@ -28,6 +29,9 @@
 </template>
 
 <script>
+// TODO: secure reading and writing
+// TODO; remove api keys and variables from raw js
+
 import excluded from "./assets/stopList2.json";
 import $ from "jquery";
 import bootstrap from "bootstrap";
@@ -36,9 +40,10 @@ import * as d3 from "d3";
 import * as cloud from "d3-cloud";
 import * as promise from "d3.promise";
 
-import GraphToggles from "./components/GraphToggles.vue";
+import DevInfo from "./components/DevInfo.vue";
 import Login from "./components/Login.vue";
 import UserOptions from "./components/UserOptions.vue";
+import GraphToggles from "./components/GraphToggles.vue";
 import MyCloud from "./components/Cloud.vue";
 import Entries from "./components/Entries.vue";
 import SubUser from "./components/SubUser.vue";
@@ -97,6 +102,7 @@ export default {
     }
   },
   components: {
+    DevInfo,
     Login,
     UserOptions,
     GraphToggles,
@@ -652,7 +658,7 @@ body  {
 
 #app  {
   height: 100%;
-  margin-top: 3%;
+  margin-top: 1%;
   padding: 0;
   width: 100%;
 }
