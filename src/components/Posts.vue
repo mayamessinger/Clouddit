@@ -1,7 +1,7 @@
 <template>
 	<div class="posts" v-if="word != null">
     <div>
-      Posts with {{word}}:
+      Entries with {{word}}:
     </div>
     <div class="container">
       <div class="row" v-for="post in posts">

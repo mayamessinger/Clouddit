@@ -4,12 +4,13 @@
       <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
       </graphToggles>
       <login class="col-3" v-if="!loggedIn" @login="login()"></login>
-      <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="frontPage()" @userPosts="" @userComments="" @logout="logout()"></userOptions>
+      <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="frontPage()" @userPosts="userPosts()" @userComments="userComments()" @logout="logout()"></userOptions>
     </div>
     <div class="row" id="visuals">
       <myCloud class="col-9" id="cloud">
       </myCloud>
       <div class="params col-3">
+        <subUser :sr="subUser" v-model="subUser"></subUser>
         <subreddit :subreddit="subreddit" v-model="subreddit"></subreddit>
         <sort :sort="sort" :sorts="sorts" v-model="sort"></sort>
         <limit :limit="limit" v-model="limit"></limit>
@@ -40,6 +41,7 @@ import Login from "./components/Login.vue";
 import UserOptions from "./components/UserOptions.vue";
 import MyCloud from "./components/Cloud.vue";
 import Posts from "./components/Posts.vue";
+import SubUser from "./components/SubUser.vue";
 import Subreddit from "./components/Subreddit.vue";
 import Sort from "./components/Sort.vue";
 import Limit from "./components/Limit.vue";
@@ -99,6 +101,7 @@ export default {
     GraphToggles,
     MyCloud,
     Posts,
+    SubUser,
     Subreddit,
     Sort,
     Limit,
@@ -108,7 +111,14 @@ export default {
   methods:  {
     // update query to reflect changed values
     setQuery() {
-      this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
+      if (this.subUser === "user/") {
+        this.redditUrl = redditDomain + this.subUser + this.subreddit + "/.json?limit=" + this.limit;
+      }
+      else if (this.subUser = "r/")  {
+        this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
+      }
+
+      console.log(this.redditUrl);
 
       setTimeout(this.ready, 100);
     },
@@ -154,15 +164,30 @@ export default {
     },
     parsePosts(posts)  {
       posts.data.children.forEach(post => {
-        post.data.title.split(" ").forEach( word =>  {
-          word = this.prettify(word);
+        // post
+        if (post.kind === "t3") {
+          post.data.title.split(" ").forEach( word =>  {
+            word = this.prettify(word);
 
-          if (this.isExcluded(word)) {
-            return;
-          }
-          
-          this.addToMap(word, post);
-        });
+            if (this.isExcluded(word)) {
+              return;
+            }
+            
+            this.addToMap(word, post);
+          });
+        }
+        // comment
+        else if (post.kind === "t1")  {
+          post.data.body.split(" ").forEach( word =>  {
+            word = this.prettify(word);
+
+            if (this.isExcluded(word)) {
+              return;
+            }
+            
+            this.addToMap(word, post);
+          });
+        }
       });
     },
     // alert about bad subreddit call
@@ -198,11 +223,18 @@ export default {
             this.highestUpvotes = this.map[i].upvotes;
           }
 
-          this.map[index].posts.push({title: domParser.parseFromString(post.data.title, "text/html").body.textContent, 
-                                      subreddit: post.data.subreddit_name_prefixed,
-                                      link: redditDomain + post.data.permalink,
-                                      upvotes: post.data.ups,
-                                      nsfw: post.data.over_18});
+          if (post.data.title !== undefined) {
+            this.map[index].posts.push({title: domParser.parseFromString(post.data.title, "text/html").body.textContent, 
+                                        subreddit: post.data.subreddit_name_prefixed,
+                                        link: redditDomain + post.data.permalink,
+                                        upvotes: post.data.ups,
+                                        nsfw: post.data.over_18});
+          }
+          else if (post.data.body !== undefined)  {
+            this.map[index].posts.push({title: domParser.parseFromString(post.data.body, "text/html").body.textContent, 
+                                        link: redditDomain + post.data.permalink,
+                                        upvotes: post.data.ups});
+          }
         }
       }
       else  {
@@ -210,15 +242,26 @@ export default {
             this.highestUpvotes = post.data.ups;
           }
 
-        this.map.push({word: word,
-                      occurrences: 1,
-                      upvotes: post.data.ups,
-                      posts:
-                        [{title: domParser.parseFromString(post.data.title, "text/html").body.textContent,
-                          subreddit: post.data.subreddit_name_prefixed,
-                          link: redditDomain + post.data.permalink,
-                          upvotes: post.data.ups,
-                          nsfw: post.data.over_18}]});
+        if (post.data.title !== undefined) {
+          this.map.push({word: word,
+                        occurrences: 1,
+                        upvotes: post.data.ups,
+                        posts:
+                          [{title: domParser.parseFromString(post.data.title, "text/html").body.textContent,
+                            subreddit: post.data.subreddit_name_prefixed,
+                            link: redditDomain + post.data.permalink,
+                            upvotes: post.data.ups,
+                            nsfw: post.data.over_18}]});
+        }
+        else if (post.data.body !== undefined)  {
+          this.map.push({word: word,
+                        occurrences: 1,
+                        upvotes: post.data.ups,
+                        posts:
+                          [{title: domParser.parseFromString(post.data.body, "text/html").body.textContent,
+                            link: redditDomain + post.data.permalink,
+                            upvotes: post.data.ups}]});
+        }
       }
     },
     // universal formatting to make word cloud words not repeat
@@ -441,6 +484,8 @@ export default {
       }
     },
     codeExists(code) {
+      code = code.replace(new RegExp("\\" + "#", "gi"), "");
+
       dbCodesRef.child(code).once("value", snapshot => {
         const codeData = snapshot.val();
         if (codeData !== null) {
@@ -521,6 +566,17 @@ export default {
           this.setQuery();
         }
       });
+    },
+    // retrieve user's comment
+    userPosts() {
+      this.subUser = "user/";
+      this.subreddit = this.username + "/submitted";
+      this.setQuery();
+    },
+    userComments() {
+      this.subUser = "user/"
+      this.subreddit = this.username + "/comments";
+      this.setQuery();
     },
     logout()  {
       $.ajax({
