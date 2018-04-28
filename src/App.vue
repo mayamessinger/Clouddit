@@ -2,7 +2,7 @@
   <div id="app" class="container">
     <devInfo></devInfo>
     <div id="toggleButtons" class="row">
-      <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" @weigh="weigh($event)" @refresh="ready()">
+      <graphToggles class="col-9" :lastUpdated="lastUpdated" :weightChosen="weightOption" :weightOptions="weightOptions" :title="selected" @weigh="weigh($event)" @refresh="ready()">
       </graphToggles>
       <login class="col-3" v-if="!loggedIn" @login="login()"></login>
       <userOptions class="col-3" v-if="loggedIn" :username="username" @frontPage="frontPage()" @userPosts="userPosts()" @userComments="userComments()" @logout="logout()"></userOptions>
@@ -92,6 +92,7 @@ export default {
       map: [],
       excluded: excluded.words,
       prevExcluded: [],
+      selected: null,
       wordSelected: null,
       entriesSelected: [],
       highestOccurrences: 0,
@@ -125,6 +126,8 @@ export default {
         this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
       }
 
+      this.setEntrySelected(this.subreddit);
+
       setTimeout(this.ready, 100);
     },
     // call make map
@@ -136,6 +139,14 @@ export default {
       this.highestOccurrences = 0;
       this.highestUpvotes = 0;
       this.getEntriesData(this.redditUrl).then(this.makeCloud());
+    },
+    // make header to clarify what you're visualizing
+    setEntrySelected(entry)  {
+      this.selected = entry;
+      console.log(this.selected);
+      if (this.selected.length > 250) {
+        this.selected = this.selected.substring(0, 250) + "...";
+      }
     },
     // get last time query qas run for display
     newTime() {
@@ -433,6 +444,8 @@ export default {
     },
     // visualize the replies to a post or comment
     entryReplies(post)  {
+      this.setEntrySelected(post.title);
+
       this.redditUrl = post.link + ".json?limit=" + this.limit + "&t=" + this.time;
       this.ready();
     },

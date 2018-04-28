@@ -5,9 +5,12 @@
       <button v-for="option in weightOptions" value="option" v-bind:class="{'chosen': (weightChosen === option)}" v-on:click="$emit('weigh', option)" >{{option}}</button>
     </span>
     <span class="refresh">
-    	<button id="refreshButton" v-on:click="$emit('refresh')">&#8635;</button>
-    	<span id="refreshLast" v-if="lastUpdated !== null">Last refreshed at {{lastUpdated}}</span>
+      <button id="refreshButton" v-on:click="$emit('refresh')">&#8635;</button>
+      <span id="refreshLast" v-if="lastUpdated !== null">Last refreshed at {{lastUpdated}}</span>
     </span>
+    <div class="source">
+      <span id="clouding">Clouding children of:</span> {{title}}
+    </div>
 	</span>
 </template>
 
@@ -17,7 +20,8 @@ export default {
   props:  [
     "lastUpdated",
   	"weightChosen",
-    "weightOptions"
+    "weightOptions",
+    "title"
   ]
 }
 </script>
@@ -31,11 +35,26 @@ export default {
 	width: 100%;
 }
 
-button  {
+.weightButtons  {
+  float: left;
 }
 
 .chosen	{
 	border: 2px solid #0077D6;
+}
+
+.source {
+  display: block;
+  font-family: Georgia;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0.5%;
+  text-align: center;
+}
+
+#clouding {
+  color: blue;
+  font-weight: bold;
 }
 
 .refresh	{
