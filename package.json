@@ -13,6 +13,7 @@
     "bootstrap": "^4.1.0",
     "d3": "^5.1.0",
     "d3-cloud": "^1.2.5",
+    "d3-queue": "^3.0.7",
     "d3.promise": "^2.0.0",
     "file-system": "^2.2.2",
     "firebase": "^4.13.1",

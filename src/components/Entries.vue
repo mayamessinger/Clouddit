@@ -4,7 +4,7 @@
       Entries with {{word}}:
     </div>
     <div class="container">
-      <div class="row" v-for="entry in entries">
+      <div class="row aPost" v-for="entry in entries">
         <div class="upvotes col-1">
           &uarr; {{entry.upvotes}}
         </div>
@@ -13,24 +13,33 @@
           <a :href="entry.link">{{entry.title}}</a>
           <span v-if="entry.nsfw" v-bind:class="{nsfwFlair: entry.nsfw}">NSFW</span><br /><br />
         </div>
-        <div class="col-2">
+        <div class="col-2 postOptions">
           <button id="visComs" v-on:click="$emit('visComs', entry)">Cloud replies</button>
+          <div id="modOptions" v-if="isMod === true">
+            <button id="modLock" v-if="entry.name.includes('t3')" v-on:click="$emit('modLock', entry)">Lock post</button><br />
+            <button id="modRemove" v-on:click="$emit('modRemove', entry)">Remove entry</button>
+          </div>
         </div>
       </div>
     </div>
-	</div>
+	</div> 
 </template>
 
 <script>
+import * as promise from "d3.promise";
+
 export default {
   name: "Entries",
   data () {
     return {
+      es: this.entries,
+      mods: [[]]
     }
   },
   props:  [
     "word",
-    "entries"
+    "entries",
+    "isMod"
   ]
 }
 </script>
@@ -42,6 +51,10 @@ export default {
   margin-top: 1%;
 }
 
+.aPost  {
+  margin-bottom: 1%;
+}
+
 .upvotes  {
   color: #FF8b60;
   font-weight: bold;
@@ -51,7 +64,24 @@ export default {
   color: red;
 }
 
-#visComs  {
+.postOptions  {
   font-size: .7em;
+}
+
+.postOptions button  {
+  border: 1px solid black;
+
+}
+
+#modOptions {
+  margin-top: 5%;
+}
+
+#modRemove  {
+  background-color: orangered;
+}
+
+#modLock  {
+  background-color: orange;
 }
 </style>

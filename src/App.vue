@@ -22,7 +22,7 @@
       </div>
     </div>
     <div class="row">
-      <entries class="entries col-9" :word="wordSelected" :entries="entriesSelected" @visComs="entryReplies($event)">
+      <entries class="entries col-9" :word="wordSelected" :entries="entriesSelected" :isMod="isMod" @visComs="entryReplies($event)" @modLock="modLock($event)" @modRemove="modRemove($event)">
       </entries>
     </div>
   </div>
@@ -79,6 +79,7 @@ export default {
     return {
       loggedIn: false,
       username: null,
+      isMod: false,
       userCode: null,
       userToken: null,
       subUser: "r/",
@@ -136,14 +137,15 @@ export default {
       this.map = [];
       this.wordSelected = null;
       this.entriesSelected = [];
+      this.isMod = false;
       this.highestOccurrences = 0;
       this.highestUpvotes = 0;
+      this.checkModStatus();
       this.getEntriesData(this.redditUrl).then(this.makeCloud());
     },
     // make header to clarify what you're visualizing
     setEntrySelected(entry)  {
       this.selected = entry;
-      console.log(this.selected);
       if (this.selected.length > 250) {
         this.selected = this.selected.substring(0, 250) + "...";
       }
@@ -246,6 +248,7 @@ export default {
           if (entry.data.title !== undefined) {
             this.map[index].entries.push({title: domParser.parseFromString(entry.data.title, "text/html").body.textContent, 
                                         subreddit: entry.data.subreddit_name_prefixed,
+                                        name: entry.data.name,
                                         link: redditDomain + entry.data.permalink,
                                         upvotes: entry.data.ups,
                                         nsfw: entry.data.over_18});
@@ -253,6 +256,7 @@ export default {
           else if (entry.data.body !== undefined)  {
             this.map[index].entries.push({title: domParser.parseFromString(entry.data.body, "text/html").body.textContent,
                                         subreddit: entry.data.subreddit_name_prefixed,
+                                        name: entry.data.name,
                                         link: redditDomain + entry.data.permalink,
                                         upvotes: entry.data.ups});
           }
@@ -270,6 +274,7 @@ export default {
                         entries:
                           [{title: domParser.parseFromString(entry.data.title, "text/html").body.textContent,
                             subreddit: entry.data.subreddit_name_prefixed,
+                            name: entry.data.name,
                             link: redditDomain + entry.data.permalink,
                             upvotes: entry.data.ups,
                             nsfw: entry.data.over_18}]});
@@ -281,6 +286,7 @@ export default {
                         entries:
                           [{title: domParser.parseFromString(entry.data.body, "text/html").body.textContent,
                             subreddit: entry.data.subreddit_name_prefixed,
+                            name: entry.data.name,
                             link: redditDomain + entry.data.permalink,
                             upvotes: entry.data.ups}]});
         }
@@ -449,6 +455,44 @@ export default {
       this.redditUrl = post.link + ".json?limit=" + this.limit + "&t=" + this.time;
       this.ready();
     },
+    // lock a post
+    modLock(post) {
+      var conf = confirm("Confirm lock of:\n" + post.title);
+
+      if (conf) {
+        $.ajax({
+          type: "POST",
+          url: "https://oauth.reddit.com/api/lock",
+          beforeSend: xhr => {
+            xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+          },
+          data: {id: post.name},
+          dataType: "json",
+          success: data => {
+            alert(post.title + " locked.");
+          }
+        });
+      }
+    },
+    // remove a post or comment
+    modRemove(entry) {
+      var conf = confirm("Confirm removal of:\n" + entry.title);
+
+      if (conf) {
+        $.ajax({
+          type: "POST",
+          url: "https://oauth.reddit.com/api/remove",
+          beforeSend: xhr => {
+            xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+          },
+          data: {id: entry.name, spam: false},
+          dataType: "json",
+          success: data => {
+            alert(entry.title + " removed");
+          }
+        });
+      }
+    },
     // login with reddit OAuth2
     login() {
       var response_type = "code"; // what want back from reddit
@@ -569,11 +613,50 @@ export default {
           success: data => {
             this.loggedIn = true;
             this.username = data.name;
+            console.log(data);
           }
         });
       }
       else  {
         setTimeout(this.getUsername, 100);
+      }
+    },
+    // check if user is a mod of a subreddit, to be able to display mod options
+    checkModStatus()  {
+      if (this.mightBeSubreddit()) {
+        $.ajax({
+          type: "GET",
+          url: "https://www.reddit.com/r/" + this.subreddit + "/about/moderators.json",
+          dataType: "json",
+          success: mods => {
+            mods.data.children.forEach(mod => {
+              if (mod.name === this.username) {
+                this.isMod = true;
+              }
+            });
+          },
+          error: d => {
+            console.log("not a subreddit");
+          }
+        });
+      }
+    },
+    // mif string may be subreddit (as opposed to multireddit or user
+    mightBeSubreddit()  {
+      var stc = this.subreddit;
+      stc.toLowerCase();
+
+      if (this.subUser === "r/") {
+        return false;
+      }
+      else if (stc.includes("+")) {
+        return false;
+      }
+      else if (stc === "all" || this.subreddit === "popular") {
+        return false;
+      }
+      else  {
+        return true;
       }
     },
     // retrieve user's subscribed subreddits and set a multireddit to emulate user's "front page"
@@ -608,7 +691,6 @@ export default {
       this.subreddit = this.username + "/comments";
       this.setQuery();
     },
-    // TODO; mod options for posts
     logout()  {
       $.ajax({
         type: "POST",
@@ -621,6 +703,8 @@ export default {
         success: data => {
           dbCodesRef.child(this.userCode).remove();
           this.loggedIn = false;
+          this.username = null;
+          this.isMod = null;
           this.userCode = null;
           this.userToken = null;
           window.open(redirect_uri, "_self");

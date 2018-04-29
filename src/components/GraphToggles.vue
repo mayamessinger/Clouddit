@@ -9,7 +9,7 @@
       <span id="refreshLast" v-if="lastUpdated !== null">Last refreshed at {{lastUpdated}}</span>
     </span>
     <div class="source">
-      <span id="clouding">Clouding children of:</span> {{title}}
+      <span id="clouding">Clouding children of: </span>{{title}}
     </div>
 	</span>
 </template>

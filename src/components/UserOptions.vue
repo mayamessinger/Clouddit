@@ -1,7 +1,7 @@
 <template>
   <div class="redditUser dropdown">
     <button class="btn btn-secondary dropdown-toggle" id="userDropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      <img src="/src/assets/snoo.png" alt="snoo" height="15">
+      <img src="snoo" alt="snoo" height="15">
       &nbsp;{{username}}
     </button>
     <ul class="dropdown-menu pull-right" aria-labelledby="userDropdown">
@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import snoo from "../assets/snoo.png";
 
 export default {
   name: "UserOptions",
