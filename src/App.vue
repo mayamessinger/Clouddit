@@ -70,8 +70,7 @@ var domParser = new DOMParser;
 const redditDomain = "https://www.reddit.com/";
 const client_id = "GeDalotx_uwLig";
 const client_secret = "0WCPPtvbnnqhYKUIDHfN4Wdns7M";
-// const redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
-const redirect_uri = "http://localhost:8080";
+const redirect_uri = "https://duke-compsci290-spring2018.github.io/final-project-team-44/";
 
 export default {
   name: "app",
@@ -470,6 +469,9 @@ export default {
           dataType: "json",
           success: data => {
             alert(post.title + " locked.");
+          },
+          error: d => {
+            alert("Could not lock " + post.title);
           }
         });
       }
@@ -489,6 +491,9 @@ export default {
           dataType: "json",
           success: data => {
             alert(entry.title + " removed");
+          },
+          error: d => {
+            alert("Could not remove " + post.title);
           }
         });
       }
@@ -529,6 +534,7 @@ export default {
           }
           else if (param.match(codeEXP) != null) {
             this.userCode = param.match(codeEXP)[1];
+            this.userCode = this.userCode.replace(new RegExp("\\#", "gi"), "");
           }
         });
 
@@ -646,7 +652,7 @@ export default {
       var stc = this.subreddit;
       stc.toLowerCase();
 
-      if (this.subUser === "r/") {
+      if (this.subUser === "user/") {
         return false;
       }
       else if (stc.includes("+")) {
