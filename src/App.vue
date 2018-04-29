@@ -618,7 +618,6 @@ export default {
           success: data => {
             this.loggedIn = true;
             this.username = data.name;
-            console.log(data);
           }
         });
       }

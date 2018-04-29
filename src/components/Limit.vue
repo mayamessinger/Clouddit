@@ -21,5 +21,7 @@ export default {
 </script>
 
 <style lang="scss">
-
+#limit {
+  width: 25%;
+}
 </style>

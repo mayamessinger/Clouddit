@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import snoo from "../assets/snoo.png";
+import snooIcon from "../assets/snoo.png";
 
 export default {
   name: "UserOptions",

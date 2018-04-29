@@ -1,14 +1,11 @@
 <template>
   <div class="devInfo">
-    <span>Developed by /u/D1sc0rd1a <a title="Reddit" href="https://reddit.com/user/D1sc0rd1a"><img src="./../assets/reddit_icon.png" alt="Reddit"/></a></span>
-    <span>See this project on <a title="GitHub" href="https://github.com/mayamessinger"><img src="./../assets/github.svg" alt="GitHub"/></a></span>
+    <span>Developed by /u/D1sc0rd1a <a title="Reddit" href="https://reddit.com/user/D1sc0rd1a"><img src="./../assets/github.svg" alt="Reddit"/></a></span>
+    <span>See this project on <a title="GitHub" href="https://github.com/mayamessinger"><img src="./../assets/reddit_icon.png" alt="GitHub"/></a></span>
   </div>
 </template>
 
 <script>
-import redditIcon from "../assets/reddit_icon.png";
-import githubIcon from "../assets/github.svg";
-
 export default {
   name: "DevInfo",
   props:  [
