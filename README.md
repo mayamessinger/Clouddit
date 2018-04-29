@@ -4,8 +4,8 @@
 
 Maya Messinger (mm479)  
 Started: 13 Apr 18  
-Finished: 29 Apr 18
-Hours spent: 45
+Finished: 29 Apr 18  
+Hours spent: 48
 
 Acessible at [https://duke-compsci290-spring2018.github.io/final-project-team-44/](https://duke-compsci290-spring2018.github.io/final-project-team-44/)
 
@@ -20,3 +20,9 @@ personalized experience that allows for analysis of their own Reddit behavior.
 	* D3 cloud
 	* D3 promise
 * Stop list of common words from [https://www.ranks.nl/stopwords](https://www.ranks.nl/stopwords)
+
+### Using Clouddit
+* Anyone visiting the site can interact with data from subreddits and users
+* Logging in allows a user to cloud their personal front page, their own posts, and their own comments
+* Logged in moderators can go to subreddits they moderate, and lock posts and delete posts/comments
+	* Useful for quick filtering for specific words, can just ctrl-f for a banned word, view the list of all the posts with that word, and delete those posts

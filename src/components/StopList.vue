@@ -1,7 +1,7 @@
 <template>
   <div class="param stopList">
-    This word cloud uses a stop list to filter common words.<br />
-    To re-include a word, please check it below.
+    Clouddit filters against too-common words and excludes them from the word cloud.<br />
+    Below are those filtered words. Check a word to re-include it.
     <div>
       <label for="addWord">Add word to filter</label>
       <input type="text" id="addWord" v-model="newStop" />
