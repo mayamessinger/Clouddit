@@ -31,7 +31,7 @@
 <script>
 // TODO: secure reading and writing
 // TODO; remove api keys and variables from raw js
-const favicon = require("../assets/favicon.png");
+const favicon = require("./assets/favicon.png");
 
 import excluded from "./assets/stopList2.json";
 import $ from "jquery";
