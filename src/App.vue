@@ -31,6 +31,7 @@
 <script>
 // TODO: secure reading and writing
 // TODO; remove api keys and variables from raw js
+"/src/assets/favicon.png"
 
 import excluded from "./assets/stopList2.json";
 import $ from "jquery";
