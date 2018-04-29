@@ -16,7 +16,8 @@
         <sort :sort="sort" :sorts="sorts" :ru="subUser" v-model="sort"></sort>
         <limit :limit="limit" v-model="limit"></limit>
         <timeO :time="time" :times="times" :sort="sort" v-model="time"></timeO>
-        <input class="param" type="button" v-on:click="setQuery" value="Visualize" />
+        <input class="param" type="button" v-on:click="setQuery" value="Visualize" /><br />
+        <button class="param" id="export" v-on:click="exportData">Export current data</button>
         <stopList :stopList="excluded" :oldStop="prevExcluded" @addBackWord="addBackWord($event)">
         </stopList>
       </div>
@@ -65,7 +66,7 @@ var db = firebase.initializeApp(config).database();
 var storageRef = firebase.storage().ref();
 var dbCodesRef = db.ref("codes");
 
-var domParser = new DOMParser;
+var domParser = new DOMParser();
 const redditDomain = "https://www.reddit.com/";
 const client_id = "GeDalotx_uwLig";
 const client_secret = "0WCPPtvbnnqhYKUIDHfN4Wdns7M";
@@ -121,7 +122,7 @@ export default {
       if (this.subUser === "user/") {
         this.redditUrl = redditDomain + this.subUser + this.subreddit + "/.json?limit=" + this.limit;
       }
-      else if (this.subUser = "r/")  {
+      else if (this.subUser === "r/")  {
         this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
       }
 
@@ -362,8 +363,10 @@ export default {
     },
     // update word size mapping to reflect weight option
     decideWeight() {
+      var words;
+
       if (this.weightOption === "upvotes") {
-        var words = this.map
+        words = this.map
           .map(d => {
             return {text: d.word,
                     occurrences: d.occurrences,
@@ -373,7 +376,7 @@ export default {
           });
       }
       else if (this.weightOption === "occurrences")  {
-        var words = this.map
+        words = this.map
         .map(d => {
           return {text: d.word,
                   occurrences: d.occurrences,
@@ -492,7 +495,7 @@ export default {
             alert(entry.title + " removed");
           },
           error: d => {
-            alert("Could not remove " + post.title);
+            alert("Could not remove " + entry.title);
           }
         });
       }
@@ -525,19 +528,19 @@ export default {
         var codeEXP = /code=(\S*)/i;
 
         args.forEach(param => {
-          if (param.match(errorEXP) != null) {
+          if (param.match(errorEXP) !== null) {
             error = param.match(errorEXP)[1];
           }
-          else if (param.match(stateEXP) != null) {
+          else if (param.match(stateEXP) !== null) {
             state = param.match(stateEXP)[1];
           }
-          else if (param.match(codeEXP) != null) {
+          else if (param.match(codeEXP) !== null) {
             this.userCode = param.match(codeEXP)[1];
             this.userCode = this.userCode.replace(new RegExp("\\#", "gi"), "");
           }
         });
 
-        if (error != null) {
+        if (error !== null) {
           console.log(error + " for " + state);
           if (error === "access_denied") {
             alert("Login request was not approved");
@@ -602,7 +605,7 @@ export default {
         dbCodesRef.child(this.userCode).set({
           token: this.userToken,
           timePush: timePut.toString()
-        })
+        });
       });
     },
     // get username of logged on user after login or refresh
@@ -676,7 +679,7 @@ export default {
           this.subreddit = "";
 
           subs.data.children.forEach(sub => {
-            this.subreddit += sub.data.display_name + "+"
+            this.subreddit += sub.data.display_name + "+";
           });
 
           this.setQuery();
@@ -691,7 +694,7 @@ export default {
     },
     // retrieve user's comments to visualize
     userComments() {
-      this.subUser = "user/"
+      this.subUser = "user/";
       this.subreddit = this.username + "/comments";
       this.setQuery();
     },
@@ -734,8 +737,12 @@ export default {
           });
         },
       3000);
+    },
+    // make my data available as JSON for others
+    exportData()  {
+      var myWindow = window.open("", "Clouddit word map");
+      myWindow.document.write(JSON.stringify(this.map));
     }
-    // TODO: make my data available as JSON for others
   },
   mounted: function() {
     this.clearOldCodes();
@@ -800,5 +807,11 @@ svg {
 
 .param   {
   margin-left: 1%;
+}
+
+#export {
+  border: none;
+  margin-top: 2%;
+  padding: 0 1.5%;
 }
 </style>

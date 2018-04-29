@@ -52,13 +52,13 @@ export default {
   text-align: center;
 }
 
-#clouding {
-  color: blue;
-  font-weight: bold;
-}
-
 .refresh	{
   float: right;
   margin-right: 1.5%;
+}
+
+#clouding {
+  color: blue;
+  font-weight: bold;
 }
 </style>

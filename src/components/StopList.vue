@@ -38,7 +38,7 @@ export default {
 <style lang="scss">
 .stopList {
   height: inherit;
-  margin-top: 10%;
+  margin-top: 5%;
   max-height: 15em;
 }
 
