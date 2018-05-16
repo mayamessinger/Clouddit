@@ -88,7 +88,7 @@ export default {
       limit: 50,
       time: "",
       times: ["hour", "day", "week", "month", "year", "all"],
-      redditUrl: redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time,
+      redditUrl: `${redditDomain}${this.subUser}${this.subreddit}/${this.sort}/.json?limit=${this.limit}&t=${this.time}`,
       map: [],
       excluded: excluded.words,
       prevExcluded: [],
@@ -121,10 +121,10 @@ export default {
     setQuery() {
       switch (this.subUser) {
       	case "user/":
-      		this.redditUrl = redditDomain + this.subUser + this.subreddit + "/.json?limit=" + this.limit;
+      		this.redditUrl = `${redditDomain}${this.subUser}${this.subreddit}/.json?limit=${this.limit}`;
       		break;
       	case "r/":
-      		this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
+      		this.redditUrl = `${redditDomain}${this.subUser}${this.subreddit}/${this.sort}/.json?limit=${this.limit}&t=${this.time}`;
       		break;
       }
 
@@ -148,7 +148,7 @@ export default {
     setEntrySelected(entry)  {
       this.selected = entry;
       if (this.selected.length > 250) {
-        this.selected = this.selected.substring(0, 250) + "...";
+        this.selected = `${this.selected.substring(0, 250)}...`;
       }
     },
     // get last time query qas run for display
@@ -159,16 +159,16 @@ export default {
       var s = d.getSeconds();
 
       if (h < 10) {
-        h = "0" + h;
+        h = `0${h}`;
       }
       if (m < 10) {
-        m = "0" + m;
+        m = `0${m}`;
       }
       if (s < 10) {
-        s = "0" + s;
+        s = `0${s}`;
       }
 
-      this.lastUpdated = h + ":" + m + ":" + s;
+      this.lastUpdated = `${h}:${m}:${s}`;
     },
     // get values from reddit JSON
     getEntriesData(url)  {
@@ -217,7 +217,7 @@ export default {
     },
     // alert about bad subreddit call
     emptySub()  {
-      alert("Oh no! Looks like /r/" + this.subreddit + " doesn't exist!");
+      alert(`Oh no! Looks like /r/${this.subreddit} doesn't exist!`);
     },
     // check if word should be added to stored data, then do so if it should
     addToMap(word, entry)  {
@@ -301,7 +301,7 @@ export default {
 
       var specialChars = "!@#*()[]{}|:;<>?,.\"`";
       for (var i = 0; i < specialChars.length; i++) {
-        word = word.replace(new RegExp("\\" + specialChars[i], "gi"), "");
+        word = word.replace(new RegExp(`\\${specialChars[i]}`, "gi"), "");
       }
 
       word = word.toUpperCase();
@@ -425,23 +425,23 @@ export default {
 
       g
         .append("g")  // container element for svg
-        .attr("transform", "translate(" + $("#cloud").width() / 2 + "," + $("#cloud").height() / 3 + ")") // set center point of cloud
+        .attr("transform", `translate(${$("#cloud").width() / 2},${$("#cloud").height() / 3})`) // set center point of cloud
         .attr("text-anchor", "middle")
         .selectAll("text")  // select all child elements
         .data(words)  // data to use
         .enter().append("text") // get data missing elements
-        .style("font-size", d => { return d.size + "px"; })  // use sizes set before
+        .style("font-size", d => { return `${d.size}px`; })  // use sizes set before
         .style("fill", function(d, i) { return color(i); }) // get colorscheme
         .attr("transform", d => {
-            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; // rotate words individually if desired
+            return `translate(${[d.x, d.y]})rotate(${d.rotate})`; // rotate words individually if desired
         })
         .text(d => { return d.text; })  // set text content
         .on("mouseover", function(d){
-            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + 20 + "px"; });
+            var nodeSelection = d3.select(this).style("font-size", function(d) { return `${d.size + 20}px`; });
 
         })
         .on("mouseout", function(d){
-            var nodeSelection = d3.select(this).style("font-size", function(d) { return d.size + "px"; });
+            var nodeSelection = d3.select(this).style("font-size", function(d) { return `${d.size}px`; });
         })
         .on("click", d => {
           this.wordSelected = d.text;
@@ -459,49 +459,49 @@ export default {
     entryReplies(post)  {
       this.setEntrySelected(post.title);
 
-      this.redditUrl = post.link + ".json?limit=" + this.limit + "&t=" + this.time;
+      this.redditUrl = `${post.link}.json?limit=${this.limit}&t=${this.time}`;
       this.ready();
     },
     // lock a post
     modLock(post) {
-      var conf = confirm("Confirm lock of:\n" + post.title);
+      var conf = confirm(`Confirm lock of:\n${post.title}`);
 
       if (conf) {
         $.ajax({
           type: "POST",
           url: "https://oauth.reddit.com/api/lock",
           beforeSend: xhr => {
-            xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+            xhr.setRequestHeader("Authorization", `bearer ${this.userToken}`);
           },
           data: {id: post.name},
           dataType: "json",
           success: data => {
-            alert(post.title + " locked.");
+            alert(`${post.title} locked.`);
           },
           error: d => {
-            alert("Could not lock " + post.title);
+            alert(`Could not lock ${post.title}`);
           }
         });
       }
     },
     // remove a post or comment
     modRemove(entry) {
-      var conf = confirm("Confirm removal of:\n" + entry.title);
+      var conf = confirm(`Confirm removal of:\n${entry.title}`);
 
       if (conf) {
         $.ajax({
           type: "POST",
           url: "https://oauth.reddit.com/api/remove",
           beforeSend: xhr => {
-            xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+            xhr.setRequestHeader("Authorization", `bearer ${this.userToken}`);
           },
           data: {id: entry.name, spam: false},
           dataType: "json",
           success: data => {
-            alert(entry.title + " removed");
+            alert(`${entry.title} removed`);
           },
           error: d => {
-            alert("Could not remove " + entry.title);
+            alert(`Could not remove ${entry.title}`);
           }
         });
       }
@@ -513,12 +513,13 @@ export default {
       var duration = "temporary"; // 1 hour
       var scope = "identity mysubreddits modposts";  // what this app wants to access
 
-      window.open("https://www.reddit.com/api/v1/authorize?client_id=" + client_id +
-                  "&response_type=" + response_type +
-                  "&state=" + state +
-                  "&redirect_uri=" + redirect_uri +
-                  "&duration=" + duration +
-                  "&scope=" + scope, "_self");
+      window.open(`https://www.reddit.com/api/v1/authorize?
+      	client_id=${client_id}
+      	&response_type=${response_type}
+      	&state=${state}
+      	&redirect_uri=${redirect_uri}
+      	&duration=${duration}
+      	&scope=${scope}`, "_self");
     },
     // check if user has logged in with reddit, to start opening up features to them
     checkLogin()  {
@@ -547,7 +548,7 @@ export default {
         });
 
         if (error !== null) {
-          console.log(error + " for " + state);
+          console.log(`${error} for ${state}`);
           switch (error)	{
           	case "access_denied":
           		alert("Login request was not approved");
@@ -575,12 +576,8 @@ export default {
     codeExists() {
       dbCodesRef.child(this.userCode).once("value", snapshot => {
         const codeData = snapshot.val();
-        if (codeData !== null) {
-          this.getTokenDB();
-        }
-        else  {
-          this.getTokenNew();
-        }
+        codeData !== null ?
+        	this.getTokenDB() : this.getTokenNew();
       });
     },
     // get previously-authorized authorization token from firebase
@@ -597,7 +594,7 @@ export default {
         type: "POST",
         url: "https://www.reddit.com/api/v1/access_token",
         beforeSend: xhr => {
-          xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
+          xhr.setRequestHeader("Authorization", "Basic " + window.btoa(`${client_id}:${client_secret}`));
         },
         data: {grant_type: "authorization_code", code: this.userCode, redirect_uri: redirect_uri},
         dataType: "json",
@@ -623,7 +620,7 @@ export default {
           type: "GET",
           url: "https://oauth.reddit.com/api/v1/me",
           beforeSend: xhr => {
-            xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+            xhr.setRequestHeader("Authorization", `bearer ${this.userToken}`);
           },
           dataType: "json",
           success: data => {
@@ -641,7 +638,7 @@ export default {
       if (this.mightBeSubreddit()) {
         $.ajax({
           type: "GET",
-          url: "https://www.reddit.com/r/" + this.subreddit + "/about/moderators.json",
+          url: `https://www.reddit.com/r/${this.subreddit}/about/moderators.json`,
           dataType: "json",
           success: mods => {
             mods.data.children.forEach(mod => {
@@ -664,15 +661,14 @@ export default {
       if (this.subUser === "user/") {
         return false;
       }
-      else if (stc.includes("+")) {
+      if (stc.includes("+")) {
         return false;
       }
-      else if (stc === "all" || this.subreddit === "popular") {
+      if (stc === "all" || this.subreddit === "popular") {
         return false;
       }
-      else  {
-        return true;
-      }
+      
+      return true;
     },
     // retrieve user's subscribed subreddits and set a multireddit to emulate user's "front page"
     frontPage() {
@@ -680,14 +676,14 @@ export default {
         type: "GET",
         url: "https://oauth.reddit.com/subreddits/mine/?limit=100",
         beforeSend: xhr => {
-          xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
+          xhr.setRequestHeader("Authorization", `bearer ${this.userToken}`);
         },
         dataType: "json",
         success: subs => {
           this.subreddit = "";
 
           subs.data.children.forEach(sub => {
-            this.subreddit += sub.data.display_name + "+";
+            this.subreddit += `${sub.data.display_name}+`;
           });
 
           this.setQuery();
@@ -697,13 +693,13 @@ export default {
     // retrieve user's posts to visualize
     userPosts() {
       this.subUser = "user/";
-      this.subreddit = this.username + "/submitted";
+      this.subreddit = `${this.username}submitted`;
       this.setQuery();
     },
     // retrieve user's comments to visualize
     userComments() {
       this.subUser = "user/";
-      this.subreddit = this.username + "/comments";
+      this.subreddit = `${this.username}/comments`;
       this.setQuery();
     },
     logout()  {
@@ -711,7 +707,7 @@ export default {
         type: "POST",
         url: "https://www.reddit.com/api/v1/revoke_token",
         beforeSend: xhr => {
-          xhr.setRequestHeader("Authorization", "Basic " + window.btoa(client_id + ":" + client_secret));
+          xhr.setRequestHeader("Authorization", "Basic " + window.btoa(`${client_id}:${client_secret}`));
         },
         data: {token: this.userToken},
         dataType: "json",
