@@ -119,11 +119,13 @@ export default {
   methods:  {
     // update query to reflect changed values
     setQuery() {
-      if (this.subUser === "user/") {
-        this.redditUrl = redditDomain + this.subUser + this.subreddit + "/.json?limit=" + this.limit;
-      }
-      else if (this.subUser === "r/")  {
-        this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
+      switch (this.subUser) {
+      	case "user/":
+      		this.redditUrl = redditDomain + this.subUser + this.subreddit + "/.json?limit=" + this.limit;
+      		break;
+      	case "r/":
+      		this.redditUrl = redditDomain + this.subUser + this.subreddit + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
+      		break;
       }
 
       this.setEntrySelected(this.subreddit);
@@ -185,29 +187,31 @@ export default {
       }
 
       entries.data.children.forEach(entry => {
-        // post
-        if (entry.kind === "t3") {
-          entry.data.title.split(" ").forEach( word =>  {
-            word = this.prettify(word);
+        switch (entry.kind)	{
+        	// post
+        	case "t3":
+        		entry.data.title.split(" ").forEach( word =>  {
+	            word = this.prettify(word);
 
-            if (this.isExcluded(word)) {
-              return;
-            }
-            
-            this.addToMap(word, entry);
-          });
-        }
-        // comment
-        else if (entry.kind === "t1")  {
-          entry.data.body.split(" ").forEach( word =>  {
-            word = this.prettify(word);
+	            if (this.isExcluded(word)) {
+	              return;
+	            }
+	            
+	            this.addToMap(word, entry);
+	          });
+	          break;
+	        // comment
+	        case "t1":
+	        	entry.data.body.split(" ").forEach( word =>  {
+	            word = this.prettify(word);
 
-            if (this.isExcluded(word)) {
-              return;
-            }
-            
-            this.addToMap(word, entry);
-          });
+	            if (this.isExcluded(word)) {
+	              return;
+	            }
+	            
+	            this.addToMap(word, entry);
+	          });
+	          break;
         }
       });
     },
@@ -365,36 +369,38 @@ export default {
     decideWeight() {
       var words;
 
-      if (this.weightOption === "upvotes") {
-        words = this.map
-          .map(d => {
-            return {text: d.word,
-                    occurrences: d.occurrences,
-                    upvotes: d.upvotes,
-                    entries: d.entries,
-                    size: d.upvotes / this.highestUpvotes * 100};
-          });
-      }
-      else if (this.weightOption === "occurrences")  {
-        words = this.map
-        .map(d => {
-          return {text: d.word,
-                  occurrences: d.occurrences,
-                  upvotes: d.upvotes,
-                  entries: d.entries,
-                  size: d.occurrences / this.highestOccurrences * 100};
-        });
+      switch (this.weightOption)	{
+      	case "upvotes":
+      		words = this.map
+	          .map(d => {
+	            return {text: d.word,
+	                    occurrences: d.occurrences,
+	                    upvotes: d.upvotes,
+	                    entries: d.entries,
+	                    size: d.upvotes / this.highestUpvotes * 100};
+	          });
+	        break;
+	      case "occurrences":
+	      	words = this.map
+		        .map(d => {
+		          return {text: d.word,
+		                  occurrences: d.occurrences,
+		                  upvotes: d.upvotes,
+		                  entries: d.entries,
+		                  size: d.occurrences / this.highestOccurrences * 100};
+		        });
+		      break;
       }
 
       return words;
     },
     // calculate font sizes - relation to max instead of hard-coded
     calcTextSize(value)  {
-      if (this.weightOption === "upvotes") {
-        return (value/this.highestUpvotes) * 100;
-      }
-      else if (this.weightOption === "occurrences")  {
-        return (value/this.highestOccurrences) * 40;
+      switch (this.weightOption)	{
+      	case "upvotes":
+      		return (value/this.highestUpvotes) * 100;
+      	case "occurrences":
+      		return (value/this.highestOccurrences) * 40;
       }
     },
     // make cloud SVG and display
@@ -542,20 +548,22 @@ export default {
 
         if (error !== null) {
           console.log(error + " for " + state);
-          if (error === "access_denied") {
-            alert("Login request was not approved");
-          }
-          else if (error === "unsupported_response_type")  {
-            alert("Unable to log in, but it's the developer's fault, not yours.");
-            console.log("response_type not token");
-          }
-          else if (error === "invalid_scope")  {
-            alert("Unable to log in, but it's the developer's fault, not yours.");
-            console.log("invalid_scope");
-          }
-          else if (error === "invalid_request")  {
-            alert("Unable to log in, but it's the developer's fault, not yours.");
-            console.log("Bad authorization, invalid_request");
+          switch (error)	{
+          	case "access_denied":
+          		alert("Login request was not approved");
+          		break;
+          	case "unsupported_response_type":
+          		alert("Unable to log in, but it's the developer's fault, not yours.");
+            	console.log("response_type not token");
+            	break;
+            case "invalid_scope":
+            	alert("Unable to log in, but it's the developer's fault, not yours.");
+            	console.log("invalid_scope");
+            	break;
+            case "invalid_request":
+            	alert("Unable to log in, but it's the developer's fault, not yours.");
+            	console.log("Bad authorization, invalid_request");
+            	break;
           }
         }
         else  {
