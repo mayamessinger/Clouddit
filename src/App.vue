@@ -749,7 +749,15 @@ export default {
     // make my data available as JSON for others
     exportData()  {
       var myWindow = window.open("", "Clouddit word map");
-      myWindow.document.write(JSON.stringify(this.map));
+      myWindow.document.write("{");
+      myWindow.document.write("\"time of data\":\"" + new Date().toDateString() + " " + this.lastUpdated + "\",");
+      myWindow.document.write("\"subredddit or user\":\"" + this.subUser + "\",");
+      myWindow.document.write("\"subreddit\":\"" + this.subreddit + "\",");
+      myWindow.document.write("\"sort\":\"" + this.sort + "\",");
+      myWindow.document.write("\"# of posts limit\":\"" + this.limit + "\",");
+      myWindow.document.write("\"time period\":\"" + this.time + "\",");
+      myWindow.document.write("\"map\":" + JSON.stringify(this.map));
+      myWindow.document.write("}");
     }
   },
   mounted: function() {
