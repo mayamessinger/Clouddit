@@ -70,7 +70,7 @@ var domParser = new DOMParser();
 const redditDomain = "https://www.reddit.com/";
 const client_id = "GeDalotx_uwLig";
 const client_secret = "0WCPPtvbnnqhYKUIDHfN4Wdns7M";
-const redirect_uri = "https://mayamessinger.net/Clouddit/";
+const redirect_uri = "https://mayamessinger.net/Clouddit";
 
 export default {
   name: "app",
@@ -511,7 +511,7 @@ export default {
       var response_type = "code"; // what want back from reddit
       var state = Math.random().toString(36).substring(2);  // random string, check received back against sent to verify same request
       var duration = "temporary"; // 1 hour
-      var scope = "identity mysubreddits modposts";  // what this app wants to access
+      var scope = "read identity mysubreddits modposts";  // what this app wants to access
 
       window.open("https://www.reddit.com/api/v1/authorize?client_id=" + client_id +
                   "&response_type=" + response_type +
@@ -661,7 +661,10 @@ export default {
       var stc = this.subreddit;
       stc.toLowerCase();
 
-      if (this.subUser === "user/") {
+      if (this.selected === "front page") {
+        return false;
+      }
+      else if (this.subUser === "user/") {
         return false;
       }
       else if (stc.includes("+")) {
@@ -678,19 +681,18 @@ export default {
     frontPage() {
       $.ajax({
         type: "GET",
-        url: "https://oauth.reddit.com/subreddits/mine/?limit=100",
+        url: "https://oauth.reddit.com",
         beforeSend: xhr => {
           xhr.setRequestHeader("Authorization", "bearer " + this.userToken);
         },
         dataType: "json",
         success: subs => {
           this.subreddit = "";
+          this.selected = "front page";
 
-          subs.data.children.forEach(sub => {
-            this.subreddit += sub.data.display_name + "+";
-          });
+          this.redditUrl = redditDomain + "/" + this.sort + "/.json?limit=" + this.limit + "&t=" + this.time;
 
-          this.setQuery();
+          this.ready();
         }
       });
     },
