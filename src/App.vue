@@ -70,7 +70,7 @@ var domParser = new DOMParser();
 const redditDomain = "https://www.reddit.com/";
 const client_id = "GeDalotx_uwLig";
 const client_secret = "0WCPPtvbnnqhYKUIDHfN4Wdns7M";
-const redirect_uri = "https://mayamessinger.net/Clouddit";
+const redirect_uri = "https://mayamessinger.dev/Clouddit";
 
 export default {
   name: "app",
